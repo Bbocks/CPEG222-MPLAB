@@ -90,84 +90,79 @@ int side = 0;
 /* ----------------------------- Main --------------------------------------- */
 int main(void)
 {
-    /*-------------------- Port and State Initialization -------------------------
-*/
-    initialize_ports();
-    initialize_output_states();
-    RGBLED_Init();
+    /*-------------------- Port and State Initialization -------------------------*/
+    initialize_ports();            // Initialize ports for input/output
+    initialize_output_states();    // Set initial output states
+    RGBLED_Init();                 // Initialize the RGB LED
+
+    // Time and alarm arrays, initialized with modulo to restrict values to single digits
+    char vals[3] = {val0 % 10, val1 % 10, val2 % 10, val3 % 10};
+    char alrm[3] = {val0 % 10, val1 % 10, val2 % 10, val3 % 10};
     
-    char vals[3] = {val0%10, val1%10, val2%10, val3%10};
-    char alrm[3] = {val0%10, val1%10, val2%10, val3%10};
-    
-    alrm[3] = 1;
-    alrm[2] = 2;
-    
-    int count = 0;
-    
+    alrm[3] = 1;                   // Set initial alarm hour
+    alrm[2] = 2;                   // Set initial alarm minute
+
+    int count = 0;                 // Counter for alarm mode blinking
+
     while (TRUE)
     {
-        vals[3] = 0;
-        delay_ms(500);
-        /*-------------------- Main logic and actions start 
---------------------------*/
-        handle_button_presses();
+        vals[3] = 0;               // Reset time seconds digit
+        delay_ms(500);             // Delay for timing
+
+        /*-------------------- Main logic and actions start --------------------------*/
+        handle_button_presses();   // Check for button presses
+
+        // State 1: Set Time Mode
         while (state == 1) {
-            LCD_WriteStringAtPos("    Group #37     ", 0, 0); //Display "Welcome" at line 0,
-            LCD_WriteStringAtPos("    Set Time   ", 1, 0); //Display "Press BtnC" at line 
-            
-            handle_button_presses();
-            
-            if (pressedUnlockedBtnC) {
-                state = 3;
+            LCD_WriteStringAtPos("    Group #37     ", 0, 0); // Display group information
+            LCD_WriteStringAtPos("    Set Time      ", 1, 0); // Prompt user to set time
+
+            handle_button_presses(); // Check for button input
+
+            if (pressedUnlockedBtnC) { 
+                state = 3; // Switch to Display Time Mode if Button C is pressed
             }
-            
-            if (pressedUnlockedBtnL) {
-                if (side == 1) {
-                    side = 0;
-                } else if (side == 0) {
-                    side = 1;
-                }
+
+            if (pressedUnlockedBtnL) { 
+                side = (side == 1) ? 0 : 1; // Toggle between hours and minutes
             }
-            
-            if (pressedUnlockedBtnR) {
-                vals[0] = 0;
-                vals[1] = 0;
-                vals[2] = 0;
-                vals[3] = 0;
+
+            if (pressedUnlockedBtnR) { 
+                vals[0] = vals[1] = vals[2] = vals[3] = 0; // Reset time to 00:00
             }
-            
+
             if (pressedUnlockedBtnU) {
-                if (side == 0) {
+                // Increment time based on selected side
+                if (side == 0) { 
                     if (vals[1] == 5 && vals[0] == 9) {
-                        vals[0] = 0;
-                        vals[1] = 0;
+                        vals[0] = vals[1] = 0;
                     } else if (vals[0] == 9) {
-                        vals[1]++;
                         vals[0] = 0;
+                        vals[1]++;
                     } else {
                         vals[0]++;
                     }
-                } else if (side == 1) {
+                } else if (side == 1) { 
                     if (vals[3] == 2 && vals[2] == 3) {
-                        vals[2] = 0;
-                        vals[3] = 0;
+                        vals[2] = vals[3] = 0;
                     } else if (vals[2] == 9) {
-                        vals[3]++;
                         vals[2] = 0;
+                        vals[3]++;
                     } else {
                         vals[2]++;
                     }
                 }
             }
-            
+
             if (pressedUnlockedBtnD) {
+                // Decrement time based on selected side
                 if (side == 0) {
                     if (vals[1] == 0 && vals[0] == 0) {
                         vals[0] = 9;
                         vals[1] = 5;
                     } else if (vals[0] == 0) {
-                        vals[1]--;
                         vals[0] = 9;
+                        vals[1]--;
                     } else {
                         vals[0]--;
                     }
@@ -175,250 +170,136 @@ int main(void)
                     if (vals[3] == 0 && vals[2] == 0) {
                         vals[2] = 3;
                         vals[3] = 2;
-                    } else if (vals[2] == 0 && vals[3] == 2) {
-                        vals[3]--;
+                    } else if (vals[2] == 0 && vals[3] > 0) {
                         vals[2] = 9;
-                    } else if (vals[2] == 0 && vals[3] == 1) {
                         vals[3]--;
-                        vals[2] = 9;
                     } else {
                         vals[2]--;
                     }
                 }
             }
 
-             SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);//think about how to edit this
-             delay_ms(10);
+            SSD_WriteDigits(vals[0], vals[1], vals[2], vals[3], 0, 0, 0, 0); // Display current time
+            delay_ms(10); // Short delay for display update
         }
-        
-        while (state == 2) {
-            LCD_WriteStringAtPos("    Group #37     ", 0, 0); //Display "Welcome" at line 0,
-            LCD_WriteStringAtPos("    Set Alarm   ", 1, 0); //Display "Press BtnC" at line 
-            
-            handle_button_presses();
-            
-            vals[0]++;
-            if (vals[0] == 10) {
-                vals[0] = 0;
-                vals[1]++;
-            }           
-            if (vals[1] == 6 && vals[0] == 0) {
-                vals[0] = 0;
-                vals[1] = 0;
-                vals[2]++;
-            if (vals[3] == 2 && vals[2] == 3) {
-                vals[0] = 0;
-                vals[1] = 0;
-                vals[2] = 0;
-                vals[3] = 0;
-            } 
-            } if (vals[2] == 9) {
-                vals[2] = 0;
-                vals[3]++;
-                vals[0] = 0;
-                vals[1] = 0;
-            }
-            
-            int j = 0;
-            while (j <= 400){
-                handle_button_presses();
-                delay_ms(1);
-                
-                if (pressedUnlockedBtnC) {
-                state = 3;
-            }
-            
-            if (pressedUnlockedBtnL) {
-                if (side == 1) {
-                    side = 0;
-                } else if (side == 0) {
-                    side = 1;
-                }
-            }
-            
-            if (pressedUnlockedBtnR) {
-                vals[0] = alrm[0];
-                vals[1] = alrm[1];
-                vals[2] = alrm[2];
-                vals[3] = alrm[3];
-                state = 1;
-            }
-            
-            if (pressedUnlockedBtnU) {
-                if (side == 0) {
-                    if (alrm[1] == 5 && alrm[0] == 9) {
-                        alrm[0] = 0;
-                        alrm[1] = 0;
-                    } else if (alrm[0] == 9) {
-                        alrm[1]++;
-                        alrm[0] = 0;
-                    } else {
-                        alrm[0]++;
-                    }
-                } else if (side == 1) {
-                    if (alrm[3] == 2 && alrm[2] == 3) {
-                        alrm[2] = 0;
-                        alrm[3] = 0;
-                    } else if (alrm[2] == 9) {
-                        alrm[3]++;
-                        alrm[2] = 0;
-                    } else {
-                        alrm[2]++;
-                    }
-                }
-            }
-            
-            if (pressedUnlockedBtnD) {
-                if (side == 0) {
-                    if (alrm[1] == 0 && alrm[0] == 0) {
-                        alrm[0] = 9;
-                        alrm[1] = 5;
-                    } else if (alrm[0] == 0) {
-                        alrm[1]--;
-                        alrm[0] = 9;
-                    } else {
-                        alrm[0]--;
-                    }
-                } else if (side == 1) {
-                    if (alrm[3] == 0 && alrm[2] == 0) {
-                        alrm[2] = 3;
-                        alrm[3] = 2;
-                    } else if (alrm[2] == 0 && alrm[3] == 2) {
-                        alrm[3]--;
-                        alrm[2] = 9;
-                    } else if (alrm[2] == 0 && alrm[3] == 1) {
-                        alrm[3]--;
-                        alrm[2] = 9;
-                    } else {
-                        alrm[2]--;
-                    }
-                }
-            }
-                
-                j++;
-            }
-            
 
-             SSD_WriteDigits(alrm[0],alrm[1],alrm[2],alrm[3],0,0,0,0);//think about how to edit this
-             delay_ms(10);
-        }
-        
-        while (state == 3) {
-            LCD_WriteStringAtPos("    Group #37     ", 0, 0); //Display "Welcome" at line 0,
-            LCD_WriteStringAtPos("   Display Time   ", 1, 0); //Display "Press BtnC" at line 
-            
-            handle_button_presses();
-            
+        // State 2: Set Alarm Mode
+        while (state == 2) {
+            LCD_WriteStringAtPos("    Group #37     ", 0, 0); // Display group information
+            LCD_WriteStringAtPos("    Set Alarm     ", 1, 0); // Prompt user to set alarm
+
+            handle_button_presses(); // Check for button input
+
+            // Increment alarm values for demonstration
             vals[0]++;
             if (vals[0] == 10) {
                 vals[0] = 0;
                 vals[1]++;
-            }           
+            }
             if (vals[1] == 6 && vals[0] == 0) {
-                vals[0] = 0;
-                vals[1] = 0;
+                vals[1] = vals[0] = 0;
                 vals[2]++;
-            if (vals[3] == 2 && vals[2] == 3) {
-                vals[0] = 0;
-                vals[1] = 0;
-                vals[2] = 0;
-                vals[3] = 0;
-            } 
-            } if (vals[2] == 9) {
+            }
+            if (vals[2] == 9) {
                 vals[2] = 0;
                 vals[3]++;
-                vals[0] = 0;
-                vals[1] = 0;
-            } 
-            int i = 0; 
-            while (i <= 400){
+            }
+
+            // Process button inputs and control alarm setting loop
+            for (int j = 0; j <= 400; j++) {
                 handle_button_presses();
                 delay_ms(1);
-                if (pressedUnlockedBtnR) {
-                    side = 0;
-                    state = 1;
-                    vals[0] = 0;
-                    vals[1] = 0;
-                    vals[2] = 0;
-                    vals[3] = 0;
-                } else if (pressedUnlockedBtnC) {
-                    state = 2;
+
+                if (pressedUnlockedBtnC) state = 3; // Move to Display Time Mode
+                if (pressedUnlockedBtnL) side = (side == 1) ? 0 : 1; // Toggle between hours and minutes
+                if (pressedUnlockedBtnR) { 
+                    vals[0] = alrm[0];
+                    vals[1] = alrm[1];
+                    vals[2] = alrm[2];
+                    vals[3] = alrm[3];
+                    state = 1; // Restore time and switch to Set Time Mode
                 }
-                i++;
             }
-            
+
+            SSD_WriteDigits(alrm[0], alrm[1], alrm[2], alrm[3], 0, 0, 0, 0); // Display alarm time
+            delay_ms(10); // Short delay for display update
+        }
+
+        // State 3: Display Time Mode
+        while (state == 3) {
+            LCD_WriteStringAtPos("    Group #37     ", 0, 0); // Display group information
+            LCD_WriteStringAtPos("   Display Time   ", 1, 0); // Prompt user for time display
+
+            handle_button_presses(); // Check for button input
+
+            // Increment time for demonstration purposes
+            vals[0]++;
+            if (vals[0] == 10) {
+                vals[0] = 0;
+                vals[1]++;
+            }
+            if (vals[1] == 6 && vals[0] == 0) {
+                vals[1] = vals[0] = 0;
+                vals[2]++;
+            }
+            if (vals[2] == 9) {
+                vals[2] = 0;
+                vals[3]++;
+            }
+
+            // Handle inputs within display time loop
+            for (int i = 0; i <= 400; i++) {
+                handle_button_presses();
+                delay_ms(1);
+                if (pressedUnlockedBtnR) { 
+                    side = 0;
+                    state = 1; // Go back to Set Time Mode
+                    vals[0] = vals[1] = vals[2] = vals[3] = 0;
+                } else if (pressedUnlockedBtnC) {
+                    state = 2; // Switch to Set Alarm Mode
+                }
+            }
+
+            // If current time matches alarm time, switch to Alarm Mode
             if ((vals[0] == alrm[0]) && (vals[1] == alrm[1]) && (vals[2] == alrm[2]) && (vals[3] == alrm[3])) {
                 state = 4;
             }
-            
-            
-            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);//think about how to edit this
-            delay_ms(10);
+
+            SSD_WriteDigits(vals[0], vals[1], vals[2], vals[3], 0, 0, 0, 0); // Display current time
+            delay_ms(10); // Short delay for display update
         }
-        
+
+        // State 4: Alarm Mode
         while (state == 4) {
-            LCD_WriteStringAtPos("    Group #37     ", 0, 0); //Display "Welcome" at line 0,
-            LCD_WriteStringAtPos("    Alarming      ", 1, 0); //Display "Press BtnC" at line 
-            
-            handle_button_presses();
-            
-            vals[0]++;
-            count++;
-            if (vals[0] == 10) {
-                vals[0] = 0;
-                vals[1]++;
-            }           
-            if (vals[1] == 6 && vals[0] == 0) {
-                vals[0] = 0;
-                vals[1] = 0;
-                vals[2]++;
-            if (vals[3] == 2 && vals[2] == 3) {
-                vals[0] = 0;
-                vals[1] = 0;
-                vals[2] = 0;
-                vals[3] = 0;
-            } 
-            } if (vals[2] == 9) {
-                vals[2] = 0;
-                vals[3]++;
-                vals[0] = 0;
-                vals[1] = 0;
-            } 
-            int i = 0; 
-            while (i <= 400){
-                handle_button_presses();
-                delay_ms(1);
-                if (pressedUnlockedBtnC && pressedUnlockedBtnR) {
-                    RGBLED_SetValue(0,0,0);
-                    mode = ALARM_OFF;
-                    turnOffAlarm();
-                    state = 3;
-                }
-                i++;
-            }
-            
-            if ((count%2) == 0) {
-                SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
-                RGBLED_SetValue(255,0,0);
-                mode = ALARM_ON;
+            LCD_WriteStringAtPos("    Group #37     ", 0, 0); // Display group information
+            LCD_WriteStringAtPos("    Alarming      ", 1, 0); // Indicate alarm is active
+
+            handle_button_presses(); // Check for button input
+
+            // Alarm blinking logic
+            if ((count++ % 2) == 0) {
+                SSD_WriteDigits(vals[0], vals[1], vals[2], vals[3], 0, 0, 0, 0); // Display current time
+                RGBLED_SetValue(255, 0, 0); // Set RGB LED to red
+                mode = ALARM_ON;            // Set alarm mode to ON
                 turnOnAlarm();
-            } else if ((count%2) == 1) {
-                SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
-                RGBLED_SetValue(0,0,0);
-                mode = ALARM_OFF;
+            } else {
+                SSD_WriteDigits(-1, -1, -1, -1, 0, 0, 0, 0); // Blink display off
+                RGBLED_SetValue(0, 0, 0);    // Turn off RGB LED
+                mode = ALARM_OFF;            // Set alarm mode to OFF
                 turnOffAlarm();
-            }
-            if (count == 10) {
-                RGBLED_SetValue(0,0,0);
-                mode = ALARM_OFF;
-                turnOffAlarm();
-                state = 3;
             }
 
-            delay_ms(10);
+            // Check if alarm should be turned off or return to time display
+            if (count == 10 || (pressedUnlockedBtnC && pressedUnlockedBtnR)) {
+                RGBLED_SetValue(0, 0, 0);    // Turn off RGB LED
+                mode = ALARM_OFF;            // Set alarm mode to OFF
+                turnOffAlarm();
+                state = 3;                   // Return to Display Time Mode
+            }
+            delay_ms(10); // Short delay for alarm update
         }
     }
-    RGBLED_Close();
+    RGBLED_Close(); // Cleanup and close RGB LED
 }
 
 void initialize_ports()
