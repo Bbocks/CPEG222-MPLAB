@@ -101,17 +101,17 @@ void CNConfig() {
     /* Make sure vector interrupts is disabled prior to configuration */
     macro_disable_interrupts;
     
-    /* Complete the following configuration of CN interrupts, then uncomment them
-    CNCONDbits.ON = ____;   //all port D pins to trigger CN interrupts
-    CNEND = _______;      	//configure PORTD pins 8-11 as CN pins
-    CNPUD = _______;      	//enable pullups on PORTD pins 8-11
+    // Complete the following configuration of CN interrupts, then uncomment them
+    CNCONDbits.ON = 1;   //all port D pins to trigger CN interrupts
+    CNEND = 8-11;      	//configure PORTD pins 8-11 as CN pins
+    CNPUD = 1;      	//enable pullups on PORTD pins 8-11
 
-    IPC8bits.CNIP = _______;  	// set CN priority to  5
-    IPC8bits.CNIS = _______;  	// set CN sub-priority to 3
+    IPC8bits.CNIP = 5;  	// set CN priority to  5
+    IPC8bits.CNIS = 3;  	// set CN sub-priority to 3
 
-    IFS1bits.CNDIF = ______;   	//Clear interrupt flag status bit
-    IEC1bits.CNDIE = _____  ;   	//Enable CN interrupt on port D
-    */
+    IFS1bits.CNDIF = 0;   	//Clear interrupt flag status bit
+    IEC1bits.CNDIE = 1;   	//Enable CN interrupt on port D
+
     
     int j = PORTD;             //read port to clear mismatch on CN pins
     macro_enable_interrupts();	// re-enable interrupts
@@ -146,23 +146,31 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
         
         // check first row 
         R1 = 0; R2 = R3 = R4 = 1;
-        if (C1 == 0) { /* ... */ }      // first column
-        else if (C2 == 0) { /* ... */ } // second column
-        else if (C3 == 0) { /* ... */ } // third column
-        else if (C4 == 0) { /* ... */ } // fourth column
+        if (C1 == 0) { key = 1; }      // first column
+        else if (C2 == 0) { key = 2; } // second column
+        else if (C3 == 0) { key = 3; } // third column
+        else if (C4 == 0) { key = 10; } // fourth column
 
         // check second row 
         R2 = 0; R1 = R3 = R4 = 1;
-        if (C1 == 0) { /* ... */ }
-        else if (C2 == 0) { /* ... */ }
-        else if (C3 == 0) { /* ... */ }
-        else if (C4 == 0) { /* ... */ }
+        if (C1 == 0) { key = 4; }
+        else if (C2 == 0) { key = 5; }
+        else if (C3 == 0) { key = 6; }
+        else if (C4 == 0) { key = 11; }
 
         // check third row 
-        // ....
+        R3 = 0; R1 = R2 = R4 = 1;
+        if (C1 == 0) { key = 7; }
+        else if (C2 == 0) { key = 8; }
+        else if (C3 == 0) { key = 9; }
+        else if (C4 == 0) { key = 12; }
 
         // check fourth row 
-        // ....
+        R4 = 0; R1 = R2 = R3 = 1;
+        if (C1 == 0) { key = 0; }
+        else if (C2 == 0) { key = 15; }
+        else if (C3 == 0) { key = 14; }
+        else if (C4 == 0) { key = 13; }
 
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
@@ -221,7 +229,7 @@ void mode1_input(eKey key){
 }
 
 void mode2_input(eKey key){
-    //Go to mdoe 1 if any number key is pressed
+    //Go to mode 1 if any number key is pressed
 
     switch(key){
         case K0: case K1: case K2: case K3: case K4: case K5: case K6: case K7: case K8: case K9:
