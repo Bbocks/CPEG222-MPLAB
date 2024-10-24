@@ -52,6 +52,15 @@ void mode1();
 void mode2();
 void mode1_input(eKey key);
 void mode2_input(eKey key);
+void Timer2Handler(void);
+void setup_timer2();
+void mode4();
+void mode4_input(eKey key);
+void handle_key_clear_delete(eKey key);
+void handle_key_enter(eKey key);
+void play_jingle();
+
+int digit_count = 0;
 
 int main(void) {
 
@@ -89,10 +98,14 @@ int main(void) {
     CNConfig();
 
     /* Other initialization and configuration code */
+    setup_timer2();
 
     while (TRUE) 
     {
         //You can put key-pad indepenent mode transition here, such as countdown-driven mode trasition, monitoring of microphone or update of RGB.
+        CN_Handler();
+        
+        Timer2Handler();
     }
 } 
 
@@ -103,8 +116,8 @@ void CNConfig() {
     
     // Complete the following configuration of CN interrupts, then uncomment them
     CNCONDbits.ON = 1;   //all port D pins to trigger CN interrupts
-    CNEND = 8-11;      	//configure PORTD pins 8-11 as CN pins
-    CNPUD = 1;      	//enable pullups on PORTD pins 8-11
+    CNEND = 0xF;      	//configure PORTD pins 8-11 as CN pins
+    CNPUD = 0xF;      	//enable pullups on PORTD pins 8-11
 
     IPC8bits.CNIP = 5;  	// set CN priority to  5
     IPC8bits.CNIS = 3;  	// set CN sub-priority to 3
@@ -146,31 +159,31 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
         
         // check first row 
         R1 = 0; R2 = R3 = R4 = 1;
-        if (C1 == 0) { key = 1; }      // first column
-        else if (C2 == 0) { key = 2; } // second column
-        else if (C3 == 0) { key = 3; } // third column
-        else if (C4 == 0) { key = 10; } // fourth column
+        if (C1 == 0) { key = K1; }      // first column
+        else if (C2 == 0) { key = K2; } // second column
+        else if (C3 == 0) { key = K3; } // third column
+        else if (C4 == 0) { key = K_A; } // fourth column
 
         // check second row 
         R2 = 0; R1 = R3 = R4 = 1;
-        if (C1 == 0) { key = 4; }
-        else if (C2 == 0) { key = 5; }
-        else if (C3 == 0) { key = 6; }
-        else if (C4 == 0) { key = 11; }
+        if (C1 == 0) { key = K4; }
+        else if (C2 == 0) { key = K5; }
+        else if (C3 == 0) { key = K6; }
+        else if (C4 == 0) { key = K_B; }
 
         // check third row 
         R3 = 0; R1 = R2 = R4 = 1;
-        if (C1 == 0) { key = 7; }
-        else if (C2 == 0) { key = 8; }
-        else if (C3 == 0) { key = 9; }
-        else if (C4 == 0) { key = 12; }
+        if (C1 == 0) { key = K7; }
+        else if (C2 == 0) { key = K8; }
+        else if (C3 == 0) { key = K9; }
+        else if (C4 == 0) { key = K_C; }
 
         // check fourth row 
         R4 = 0; R1 = R2 = R3 = 1;
-        if (C1 == 0) { key = 0; }
-        else if (C2 == 0) { key = 15; }
-        else if (C3 == 0) { key = 14; }
-        else if (C4 == 0) { key = 13; }
+        if (C1 == 0) { key = K0; }
+        else if (C2 == 0) { key = K_F; }
+        else if (C3 == 0) { key = K_E; }
+        else if (C4 == 0) { key = K_D; }
 
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
