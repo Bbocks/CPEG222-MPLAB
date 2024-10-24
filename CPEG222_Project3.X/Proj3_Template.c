@@ -395,7 +395,7 @@ void display_num() {
                 for (int j = 0; j < 4; j++) {
                     vals[j] = -1;
                 }
-                count = 4;
+                count = 3;
             }
             break;
         //case K_F:    
