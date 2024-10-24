@@ -23,6 +23,7 @@
 #include "config.h" // Basys MX3 configuration header
 #include "lcd.h"    // Digilent Library for using the on-board LCD
 #include "acl.h"    // Digilent Library for using the on-board accelerometer
+#include "ssd.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -38,12 +39,18 @@
 #define C2 PORTDbits.RD10
 #define C1 PORTDbits.RD8
 
+#define SYS_FREQ (80000000L) // 80MHz system clock
+#define _80Mhz_ (80000000L)
+#define LOOPS_NEEDED_TO_DELAY_ONE_MS_AT_80MHz 1426
+#define LOOPS_NEEDED_TO_DELAY_ONE_MS (LOOPS_NEEDED_TO_DELAY_ONE_MS_AT_80MHz * (SYS_FREQ / _80Mhz_))
+
 typedef enum _KEY {K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K_A, K_B, K_C, K_D, K_E, K_F, K_NONE} eKey ;
 typedef enum _MODE {MODE1,MODE2} eModes ;
 
 eModes mode = MODE1;
 
 char new_press = FALSE;
+eKey key = K_NONE;
 
 // subrountines
 void CNConfig();
@@ -52,12 +59,6 @@ void mode1();
 void mode2();
 void mode1_input(eKey key);
 void mode2_input(eKey key);
-void Timer2Handler(void);
-void setup_timer2();
-void mode4();
-void mode4_input(eKey key);
-void handle_key_clear_delete(eKey key);
-void handle_key_enter(eKey key);
 void play_jingle();
 
 int digit_count = 0;
@@ -68,6 +69,7 @@ int main(void) {
     DDPCONbits.JTAGEN = 0; // Required to use Pin RA0 (connected to LED 0) as IO
     LCD_Init() ;
     ACL_Init();
+    SSD_Init();
 
     float rgACLGVals[3];
     ACL_ReadGValues(rgACLGVals);
@@ -98,14 +100,81 @@ int main(void) {
     CNConfig();
 
     /* Other initialization and configuration code */
-    setup_timer2();
+    int vals[3] = {0,0,0,0};
+    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+    delay_ms(10);
+    for (int i = 0; i < 4; i++) {
+        vals[i] = -1;
+    }
+    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
 
     while (TRUE) 
     {
-        //You can put key-pad indepenent mode transition here, such as countdown-driven mode trasition, monitoring of microphone or update of RGB.
-        CN_Handler();
-        
-        Timer2Handler();
+        for (int i = 0; i < 4; i++) {
+            switch(key){
+                case K0: 
+                    vals[i] = 0;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K1:
+                    vals[i] = 1;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K2:
+                    vals[i] = 2;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K3:
+                    vals[i] = 3;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K4: 
+                    vals[i] = 4;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K5: 
+                    vals[i] = 5;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K6: 
+                    vals[i] = 6;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K7: 
+                    vals[i] = 7;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K8: 
+                    vals[i] = 8;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K9:
+                    vals[i] = 9;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                //case K_A:
+                //case K_B:
+                case K_C:
+                    vals[3] = -1;
+                    i = 0;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    break;
+                case K_D:
+                    vals[i] = -1;
+                    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                    i--;
+                    break;
+                case K_E:
+                    if ((vals[0] != -1) && (vals[1] != -1) && (vals[2] != -1) && (vals[3] != -1)) {
+                        play_jingle();
+                        vals[i] = -1;
+                        SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+                        i = 0;
+                    }
+                    break;
+                //case K_F:
+            }
+        }
     }
 } 
 
@@ -135,7 +204,7 @@ void CNConfig() {
 // and put it on another timer for this project.
 
 void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
-    eKey key = K_NONE;
+    //eKey key = K_NONE;
     
     // 1. Disable CN interrupts
     IEC1bits.CNDIE = 0;     
@@ -249,4 +318,20 @@ void mode2_input(eKey key){
             mode1();
         break;
     }
+}
+
+void delay_ms(int milliseconds)
+{
+	int i;
+	for (i = 0; i < milliseconds * LOOPS_NEEDED_TO_DELAY_ONE_MS; i++)
+	{}
+}
+
+void play_jingle() {
+    for (int i = 0; i < 3; i++) {
+            LATBbits.LATB0 = 1; // Turn on speaker (example pin)
+            delay_ms(200);      // Delay to play sound
+            LATBbits.LATB0 = 0; // Turn off speaker
+            delay_ms(200);
+        }
 }
