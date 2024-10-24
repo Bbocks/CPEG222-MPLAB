@@ -75,7 +75,7 @@ void display_num();
 
 int digit_count = 0;
 int vals[3] = {0,0,0,0};
-int count = 0;
+int count = 4;
 
 int main(void) {
 
@@ -129,10 +129,7 @@ int main(void) {
 
     while (TRUE) 
     {
-        if (key != K_NONE) {
-            display_num();
-            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
-        }
+        
     }
 } 
 
@@ -215,6 +212,8 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
         LCD_WriteStringAtPos("    test     ",1,0);
+        display_num();
+        SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
     
     }
     
@@ -321,43 +320,43 @@ void display_num() {
     switch(key){
         case K0: 
             vals[count] = 0;
-            count++;
+            count--;
             break;
         case K1:
             vals[count] = 1;
-            count++;
+            count--;
             break;
         case K2:
             vals[count] = 2;
-            count++;
+            count--;
             break;
         case K3:
             vals[count] = 3;
-            count++;
+            count--;
             break;
         case K4: 
             vals[count] = 4;
-            count++;
+            count--;
             break;
         case K5: 
             vals[count] = 5;
-            count++;
+            count--;
             break;
         case K6: 
             vals[count] = 6;
-            count++;
+            count--;
             break;
         case K7: 
             vals[count] = 7;
-            count++;
+            count--;
             break;
         case K8: 
             vals[count] = 8;
-            count++;
+            count--;
             break;
         case K9:
             vals[count] = 9;
-            count++;
+            count--;
             break;
         //case K_A:
         //case K_B:
@@ -365,17 +364,18 @@ void display_num() {
             for (int j = 0; j < 4; j++) {
                 vals[j] = -1;
             }
-            count = 0;
+            count = 4;
             break;
         case K_D:
             vals[count] = -1;
-            count--;
             break;
         case K_E:
             if ((vals[0] != -1) && (vals[1] != -1) && (vals[2] != -1) && (vals[3] != -1)) {
                 play_jingle();
-                vals[count] = -1;
-                count = 0;
+                for (int j = 0; j < 4; j++) {
+                    vals[j] = -1;
+                }
+                count = 4;
             }
             break;
         //case K_F:    
