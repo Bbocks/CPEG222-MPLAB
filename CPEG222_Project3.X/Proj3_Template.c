@@ -45,6 +45,9 @@
 #define LOOPS_NEEDED_TO_DELAY_ONE_MS (LOOPS_NEEDED_TO_DELAY_ONE_MS_AT_80MHz * (SYS_FREQ / _80Mhz_))
 #define TMR_FREQ_SINE   48000 // 48 kHz
 
+#define PB_FRQ (SYS_FREQ / 8)  // Peripheral clock is SYS_FREQ divided by 8
+#define TMR4_PERIOD ((PB_FRQ / 256) / 1)  // Timer4 period for 1Hz, with 256 prescaler
+
 unsigned short rgSinSamples [] = {
 256,320,379,431,472,499,511,507,488,453,
 406,350,288,224,162,106, 59, 24,  5,  1,
@@ -63,15 +66,22 @@ eModes mode = MODE1;
 char new_press = FALSE;
 eKey key = K_NONE;
 
-// subrountines
+// subroutines
 void CNConfig();
 void handle_new_keypad_press(eKey key) ;
 void mode1();
 void mode2();
 void mode1_input(eKey key);
 void mode2_input(eKey key);
-void play_jingle();
+void turnOnAlarm();
+void tuenOffAlarm();
 void display_num();
+
+// Variables to track LED status
+int led_count = 8;  // Start with 8 LEDs on
+
+void setupTimer4(void);
+void setupLEDs(void);
 
 int digit_count = 0;
 int vals[3] = {0,0,0,0};
@@ -112,13 +122,20 @@ int main(void) {
     LCD_WriteStringAtPos("    Mode 1!     ",1,0);
     
     CNConfig();
+    setupLEDs();   // Set up LEDs for decrementing
+    setupTimer4(); // Set up Timer4 for LED decrementing
 
     /* Other initialization and configuration code */  
+    // the following lines configure interrupts to control the speaker
+	T3CONbits.ON = 0;   	// turn off Timer3
+	OC1CONbits.ON = 0;  	// Turn off OC1
+    	/* The following code sets up the alarm timer and interrupts */
+	tris_A_OUT = 0;    
+	rp_A_OUT = 0x0C; // 1100 = OC1
+    	// disable analog (set pins as digital)
+	ansel_A_OUT = 0;
     
-    PR3 = (int)((float)((float)PB_FRQ/TMR_FREQ_SINE) + 0.5);          	 
-	idxAudioBuf = 0;
-	cntAudioBuf = RGSIN_SIZE;
-	pAudioSamples = rgSinSamples;
+    turnOffAlarm();
     
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
     delay_ms(10);
@@ -285,8 +302,9 @@ void delay_ms(int milliseconds)
 	{}
 }
 
-void play_jingle() {
-    //set up alarm
+void turnOnAlarm()
+{
+	//set up alarm
 	PR3 = (int)((float)((float)PB_FRQ/TMR_FREQ_SINE) + 0.5);          	 
 	idxAudioBuf = 0;
 	cntAudioBuf = RGSIN_SIZE;
@@ -300,10 +318,11 @@ void play_jingle() {
 	OC1CONbits.ON = 1;   	// Start the OC1 module  
 	IEC0bits.T3IE = 1;  	// enable Timer3 interrupt    
 	IFS0bits.T3IF = 0;  	// clear Timer3 interrupt flag
-    
-    delay_ms(50);
-    
-    T3CONbits.ON = 0;   	// turn off Timer3
+}
+
+void turnOffAlarm()
+{
+	T3CONbits.ON = 0;   	// turn off Timer3
 	OC1CONbits.ON = 0;  	// Turn off OC1
 }
 
@@ -367,11 +386,12 @@ void display_num() {
             count = 4;
             break;
         case K_D:
+            count++;
             vals[count] = -1;
             break;
         case K_E:
             if ((vals[0] != -1) && (vals[1] != -1) && (vals[2] != -1) && (vals[3] != -1)) {
-                play_jingle();
+                turnOnAlarm();
                 for (int j = 0; j < 4; j++) {
                     vals[j] = -1;
                 }
@@ -380,4 +400,49 @@ void display_num() {
             break;
         //case K_F:    
     }
+}
+
+void setupTimer4(void) {
+    // Configure Timer4 for 1-second interrupts
+    T4CONbits.TCKPS = 7;  // Set prescaler to 256
+    PR4 = TMR4_PERIOD;    // Set period register for 1 second
+    TMR4 = 0;             // Reset timer count to 0
+
+    // Setup Timer4 interrupt
+    IFS0bits.T4IF = 0;    // Clear interrupt flag
+    IEC0bits.T4IE = 1;    // Enable Timer4 interrupt
+    IPC4bits.T4IP = 5;    // Set priority level to 5
+
+    // Start Timer4
+    T4CONbits.ON = 1;     // Turn on Timer4
+}
+
+void setupLEDs(void) {
+    // Configure LEDs (assuming LD0-LD7 are connected to PORTA)
+    TRISAbits.TRISA0 = 0; // Set RA0 (LD0) as output
+    TRISAbits.TRISA1 = 0; // Set RA1 (LD1) as output
+    TRISAbits.TRISA2 = 0; // Set RA2 (LD2) as output
+    TRISAbits.TRISA3 = 0; // Set RA3 (LD3) as output
+    TRISAbits.TRISA4 = 0; // Set RA4 (LD4) as output
+    TRISAbits.TRISA5 = 0; // Set RA5 (LD5) as output
+    TRISAbits.TRISA6 = 0; // Set RA6 (LD6) as output
+    TRISAbits.TRISA7 = 0; // Set RA7 (LD7) as output
+
+    // Initially turn on all LEDs
+    LATA = 0xFF;
+}
+
+void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
+    // Timer4 ISR triggered every 1 second
+    if (led_count > 0) {
+        led_count--;  // Decrement the number of LEDs on
+    } else {
+        led_count = 8;  // Reset to 8 LEDs after reaching 0
+    }
+
+    // Update LED states: turn on only the `led_count` most significant LEDs
+    LATA = (0xFF >> (8 - led_count));  // Shift the bits to light the correct number of LEDs
+
+    // Clear the interrupt flag
+    IFS0bits.T4IF = 0;
 }
