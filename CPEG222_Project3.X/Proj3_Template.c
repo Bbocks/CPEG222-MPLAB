@@ -85,7 +85,7 @@ void setupLEDs(void);
 
 int digit_count = 0;
 int vals[3] = {0,0,0,0};
-int count = 4;
+int count = 3;
 
 int main(void) {
 
@@ -383,7 +383,7 @@ void display_num() {
             for (int j = 0; j < 4; j++) {
                 vals[j] = -1;
             }
-            count = 4;
+            count = 3;
             break;
         case K_D:
             count++;
