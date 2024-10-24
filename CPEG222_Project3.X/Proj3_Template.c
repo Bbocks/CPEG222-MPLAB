@@ -74,7 +74,7 @@ void mode2();
 void mode1_input(eKey key);
 void mode2_input(eKey key);
 void turnOnAlarm();
-void tuenOffAlarm();
+void turnOffAlarm();
 void display_num();
 
 // Variables to track LED status
@@ -125,7 +125,6 @@ int main(void) {
     setupLEDs();   // Set up LEDs for decrementing
     setupTimer4(); // Set up Timer4 for LED decrementing
 
-    /* Other initialization and configuration code */  
     // the following lines configure interrupts to control the speaker
 	T3CONbits.ON = 0;   	// turn off Timer3
 	OC1CONbits.ON = 0;  	// Turn off OC1
@@ -134,6 +133,19 @@ int main(void) {
 	rp_A_OUT = 0x0C; // 1100 = OC1
     	// disable analog (set pins as digital)
 	ansel_A_OUT = 0;
+    
+	T3CONbits.TCKPS = 0; 	//1:1 prescale value
+	T3CONbits.TGATE = 0; 	//not gated input (the default)
+	T3CONbits.TCS = 0;   	//PCBLK input (the default)
+    
+	OC1CONbits.ON = 0;   	// Turn off OC1 while doing setup.
+	OC1CONbits.OCM = 6;  	// PWM mode on OC1; Fault pin is disabled
+	OC1CONbits.OCTSEL = 1;   // Timer3 is the clock source for this Output Compare module
+    
+	IPC3bits.T3IP = 7;  	// interrupt priority
+	IPC3bits.T3IS = 3;  	// interrupt subpriority
+    
+	macro_enable_interrupts();  // enable interrupts at CPU
     
     turnOffAlarm();
     
@@ -146,7 +158,6 @@ int main(void) {
 
     while (TRUE) 
     {
-        
     }
 } 
 
@@ -228,7 +239,6 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
 
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
-        LCD_WriteStringAtPos("    test     ",1,0);
         display_num();
         SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
     
@@ -392,6 +402,14 @@ void display_num() {
         case K_E:
             if ((vals[0] != -1) && (vals[1] != -1) && (vals[2] != -1) && (vals[3] != -1)) {
                 turnOnAlarm();
+                delay_ms(10);
+                turnOffAlarm();
+                turnOnAlarm();
+                delay_ms(10);
+                turnOffAlarm();
+                turnOnAlarm();
+                delay_ms(10);
+                turnOffAlarm();
                 for (int j = 0; j < 4; j++) {
                     vals[j] = -1;
                 }
