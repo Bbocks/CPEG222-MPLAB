@@ -95,6 +95,11 @@ int digit_count = 0;
 int vals[3] = {0,0,0,0};
 int count = 3;
 
+//All have a max length of 16 characters
+char err_msg = "";
+char food_item = "";
+char food_status = "";
+
 int main(void) {
 
     /* Initialization of LED, LCD, SSD, etc */
@@ -303,31 +308,36 @@ void mode1(){
 void mode2(){
     mode = MODE2;
 
-    LCD_WriteStringAtPos("    Mode 2!     ",1,0);
+    LCD_WriteStringAtPos("    Place your Order     ",0,0);
+    LCD_WriteStringAtPos(food_index + "-" + food_item,1,0);
 }
 
 void mode3(){
     mode = MODE3;
 
-    LCD_WriteStringAtPos("    Mode 3!     ",1,0);
+    LCD_WriteStringAtPos("    Order Placed For     ",0,0);
+    LCD_WriteStringAtPos(food_item,1,0);
 }
 
 void mode4(){
     mode = MODE4;
 
-    LCD_WriteStringAtPos("    Mode 4!     ",1,0);
+    LCD_WriteStringAtPos("  Order Lookup  ",0,0);
+    LCD_WriteStringAtPos("   Enter Code   ",1,0);
 }
 
 void mode5(){
     mode = MODE5;
 
-    LCD_WriteStringAtPos("    Mode 5!     ",1,0);
+    LCD_WriteStringAtPos(food_item,0,0);
+    LCD_WriteStringAtPos(food_status,1,0);
 }
 
 void mode6(){
     mode = MODE6;
 
-    LCD_WriteStringAtPos("    Mode 6!     ",1,0);
+    LCD_WriteStringAtPos("    Error!     ",0,0);
+    LCD_WriteStringAtPos(err_msg,1,0); //Max 16 characters
 }
 
 void mode1_input(eKey key){
@@ -369,7 +379,7 @@ void mode4_input(eKey key){
 void mode5_input(eKey key){
     switch(key){
         case K_E:
-            mode3();
+            mode1();
         break;
     }
 }
@@ -377,7 +387,7 @@ void mode5_input(eKey key){
 void mode6_input(eKey key){
     switch(key){
         case K_E:
-            mode3();
+            mode1();
         break;
     }
 }
