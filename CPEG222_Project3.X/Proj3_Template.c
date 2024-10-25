@@ -59,7 +59,7 @@ unsigned short *pAudioSamples;
 int cntAudioBuf, idxAudioBuf;
 
 typedef enum _KEY {K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K_A, K_B, K_C, K_D, K_E, K_F, K_NONE} eKey ;
-typedef enum _MODE {MODE1,MODE2} eModes ;
+typedef enum _MODE {MODE1,MODE2,MODE3,MODE4,MODE5,MODE6} eModes ;
 
 eModes mode = MODE1;
 
@@ -71,8 +71,16 @@ void CNConfig();
 void handle_new_keypad_press(eKey key) ;
 void mode1();
 void mode2();
+void mode3();
+void mode4();
+void mode5();
+void mode6();
 void mode1_input(eKey key);
 void mode2_input(eKey key);
+void mode3_input(eKey key);
+void mode4_input(eKey key);
+void mode5_input(eKey key);
+void mode6_input(eKey key);
 void turnOnAlarm();
 void turnOffAlarm();
 void display_num();
@@ -118,8 +126,8 @@ int main(void) {
     // You need to enable all the rows
     R1 = R2 = R3 = R4 = 0;
     
-    LCD_WriteStringAtPos("   Project 3    ",0,0);
-    LCD_WriteStringAtPos("    Mode 1!     ",1,0);
+    LCD_WriteStringAtPos("  Select Mode    ",0,0);
+    LCD_WriteStringAtPos("A-Place B-Status     ",1,0);
     
     CNConfig();
     setupLEDs();   // Set up LEDs for decrementing
@@ -239,8 +247,8 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
 
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
-        display_num();
-        SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+        //display_num();
+        //SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
     
     }
     
@@ -271,13 +279,25 @@ void handle_new_keypad_press(eKey key)
     case MODE2:
         mode2_input(key);
     break;
+    case MODE3:
+        mode3_input(key);
+    break;
+    case MODE4:
+        mode4_input(key);
+    break;
+    case MODE5:
+        mode5_input(key);
+    break;
+    case MODE6:
+        mode6_input(key);
+    break;
     }
 }
 
 void mode1(){
     mode = MODE1;
 
-    LCD_WriteStringAtPos("    Mode 1!     ",1,0);
+    LCD_WriteStringAtPos("A-Place B-Status     ",1,0);
 }
 
 void mode2(){
@@ -286,21 +306,78 @@ void mode2(){
     LCD_WriteStringAtPos("    Mode 2!     ",1,0);
 }
 
+void mode3(){
+    mode = MODE3;
+
+    LCD_WriteStringAtPos("    Mode 3!     ",1,0);
+}
+
+void mode4(){
+    mode = MODE4;
+
+    LCD_WriteStringAtPos("    Mode 4!     ",1,0);
+}
+
+void mode5(){
+    mode = MODE5;
+
+    LCD_WriteStringAtPos("    Mode 5!     ",1,0);
+}
+
+void mode6(){
+    mode = MODE6;
+
+    LCD_WriteStringAtPos("    Mode 6!     ",1,0);
+}
+
 void mode1_input(eKey key){
-    //Go to mode 2 if A key is pressed
+    //Go to mode 2 if A key is pressed and mode 4 id B key is pressed.
     switch(key){
         case K_A:
             mode2();
+        break;
+        case K_B:
+            mode4();
         break;
     }
 }
 
 void mode2_input(eKey key){
-    //Go to mode 1 if any number key is pressed
-
     switch(key){
-        case K0: case K1: case K2: case K3: case K4: case K5: case K6: case K7: case K8: case K9:
+        case K_E:
+            mode3();
+        break;
+    }
+}
+
+void mode3_input(eKey key){
+    switch(key){
+        case K_E:
             mode1();
+        break;
+    }
+}
+
+void mode4_input(eKey key){
+    switch(key){
+        case K_E:
+            mode3();
+        break;
+    }
+}
+
+void mode5_input(eKey key){
+    switch(key){
+        case K_E:
+            mode3();
+        break;
+    }
+}
+
+void mode6_input(eKey key){
+    switch(key){
+        case K_E:
+            mode3();
         break;
     }
 }
