@@ -99,6 +99,10 @@ int count = 3;
 char err_msg = "";
 char food_item = "";
 char food_status = "";
+char food_index = ""; //Also the food code
+char food_arr[];
+char food_index_arr[];
+int index = 0;
 
 int main(void) {
 
@@ -309,7 +313,7 @@ void mode2(){
     mode = MODE2;
 
     LCD_WriteStringAtPos("    Place your Order     ",0,0);
-    LCD_WriteStringAtPos(food_index + "-" + food_item,1,0);
+    LCD_WriteStringAtPos(food_index + "-" + food_arr[index],1,0);
 }
 
 void mode3(){
@@ -354,8 +358,27 @@ void mode1_input(eKey key){
 
 void mode2_input(eKey key){
     switch(key){
+        case K_A:
+            if ((index - 1) == sizeof(food_arr)){
+                index = 0;
+                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+            } else {
+                index++;
+                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+            }
+        break;
+        case K_B:
+            if (index = 0){
+                index = sizeof(food_arr);
+                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+            } else {
+                index = index - 1;
+                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+            }
+        break;
         case K_E:
-            mode3();
+            food_item = food_arr[index];
+            food_index = food_index_arr[index];
         break;
     }
 }
