@@ -20,6 +20,7 @@
 #include <xc.h>   //Microchip XC processor header which links to the PIC32MX370512L header
 #include <stdio.h>  // need this for sprintf
 #include <sys/attribs.h>
+#include <stdbool.h>
 #include "config.h" // Basys MX3 configuration header
 #include "lcd.h"    // Digilent Library for using the on-board LCD
 #include "acl.h"    // Digilent Library for using the on-board accelerometer
@@ -47,6 +48,9 @@
 
 #define PB_FRQ (SYS_FREQ / 8)  // Peripheral clock is SYS_FREQ divided by 8
 #define TMR4_PERIOD ((PB_FRQ / 256) / 1)  // Timer4 period for 1Hz, with 256 prescaler
+
+#define QUEUE_SIZE 8
+
 
 unsigned short rgSinSamples [] = {
 256,320,379,431,472,499,511,507,488,453,
@@ -107,10 +111,11 @@ char *err_msg = "";
 char *food_item = "";
 char *food_status = "";
 char *food_index = ""; //Also the food code
-int QUE_SIZE = 8;
-Order orderQueue[QUE_SIZE];
+Order orderQueue[QUEUE_SIZE];
 int orderCount = 0; // To keep track of number of orders
 int currentOrderCode = 0; // Store the current generated order code
+int MAX_CODE = 9999;
+int MIN_CODE = 0000;
 
 int index = 0;
 
@@ -267,7 +272,9 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
         display_num();
-        //SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+        //if (mode = MODE4){
+        //    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+        //}
     
     }
     
@@ -323,7 +330,7 @@ void mode2(){
     mode = MODE2;
 
     LCD_WriteStringAtPos("Place your Order     ",0,0);
-    LCD_WriteStringAtPos(*food_index + "-" + *food_arr[index],1,0);
+    LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
 }
 
 void mode3(){
@@ -363,7 +370,11 @@ void mode3(){
     LCD_WriteStringAtPos(food_item, 1, 0); // Display the food item name
 
     // Display the 4-digit code on the SSD
-    SSD_WriteNumber(currentOrderCode); // Function to display the number on the SSD
+    vals[0] = currentOrderCode % 1000;
+    vals[1] = currentOrderCode % 1000;
+    vals[2] = currentOrderCode % 1000;
+    vals[3] = currentOrderCode % 1000;
+    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0); // Function to display the number on the SSD
 
     // Delay for a short period to allow the user to see the confirmation
     delay_ms(500);
@@ -405,26 +416,26 @@ void mode1_input(eKey key){
 void mode2_input(eKey key){
     switch(key){
         case K_A:
-            if ((index - 1) == sizeof(food_arr)){
+            if ((index - 1) == sizeof(orderQueue)){
                 index = 0;
-                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
+                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
             } else {
                 index++;
-                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
+                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
             }
         break;
         case K_B:
             if (index = 0){
-                index = sizeof(food_arr);
-                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
+                index = sizeof(orderQueue);
+                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
             } else {
                 index = index - 1;
-                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
+                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
             }
         break;
         case K_E:
-            food_item = food_arr[index];
-            food_index = food_index_arr[index];
+            food_item = orderQueue[index].foodItem;
+            food_index = orderQueue[index].code;
             mode3();
         break;
     }
@@ -449,7 +460,13 @@ void mode4_input(eKey key){
 void mode5_input(eKey key){
     switch(key){
         case K_E:
-            mode1();
+            for (int b = 0; b < sizeof(orderQueue); b++) {
+                if (food_index = orderQueue[b].code) {
+                    mode5();
+                }
+            }
+            err_msg = "Invalid Code";
+            mode6();
         break;
     }
 }
@@ -624,16 +641,16 @@ void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
 
 int generateUniqueCode() {
     int code;
-    bool isUnique;
+    bool isUnique = FALSE;  
     
     do {
         code = rand() % (MAX_CODE - MIN_CODE + 1) + MIN_CODE; // Generate a random 4-digit code
-        isUnique = true;
+        isUnique = TRUE;
 
         // Check if the code is unique in the order queue
         for (int i = 0; i < orderCount; i++) {
             if (orderQueue[i].code == code) {
-                isUnique = false; // Code already exists, generate a new one
+                isUnique = FALSE; // Code already exists, generate a new one
                 break;
             }
         }

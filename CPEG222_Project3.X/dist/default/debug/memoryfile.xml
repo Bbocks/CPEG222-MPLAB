@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <project>                                  
-  <executable name="dist/default/production/CPEG222_Project3.X.production.elf">                 
+  <executable name="dist/default/debug/CPEG222_Project3.X.debug.elf">                 
     <memory name="program">                 
       <units>bytes</units>                 
       <length>531968</length>                 
-      <used>29112</used>                     
-      <free>502856</free>                     
+      <used>29116</used>                     
+      <free>502852</free>                     
     </memory>                              
     <memory name="data">              
       <units>bytes</units>                 
-      <length>131072</length>                 
-      <used>426</used>                     
-      <free>130646</free>                     
+      <length>131584</length>                 
+      <used>1450</used>                     
+      <free>130134</free>                     
     </memory>                              
   </executable>                            
 </project>                                 
