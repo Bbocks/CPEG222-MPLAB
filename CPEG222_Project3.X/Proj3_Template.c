@@ -187,6 +187,14 @@ int main(void) {
         vals[i] = -1;
     }
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+    
+    Order burger = {"Burger", 0, "In Queue", generateUniqueCode()};
+    Order pizza = {"Pizza", 1, "In Queue", generateUniqueCode()};
+    Order salad = {"Salad", 2, "In Queue", generateUniqueCode()};
+    
+    orderQueue[0] = burger;
+    orderQueue[1] = pizza;
+    orderQueue[2] = salad;
 
     while (TRUE) 
     {
@@ -377,7 +385,7 @@ void mode3(){
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0); // Function to display the number on the SSD
 
     // Delay for a short period to allow the user to see the confirmation
-    delay_ms(500);
+    delay_ms(5000);
 }
 
 void mode4(){
