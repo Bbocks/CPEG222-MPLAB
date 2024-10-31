@@ -111,6 +111,7 @@ char *err_msg = "";
 char *food_item = "";
 char *food_status = "";
 char *food_index = ""; //Also the food code
+Order orders[QUEUE_SIZE];
 Order orderQueue[QUEUE_SIZE];
 int orderCount = 0; // To keep track of number of orders
 int currentOrderCode = 0; // Store the current generated order code
@@ -188,13 +189,13 @@ int main(void) {
     }
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
     
-    Order burger = {"Burger", 0, "In Queue", generateUniqueCode()};
-    Order pizza = {"Pizza", 1, "In Queue", generateUniqueCode()};
-    Order salad = {"Salad", 2, "In Queue", generateUniqueCode()};
+    Order burger = {"Burger", 1, "In Queue", };
+    Order pizza = {"Pizza", 2, "In Queue", };
+    Order salad = {"Salad", 3, "In Queue", };
     
-    orderQueue[0] = burger;
-    orderQueue[1] = pizza;
-    orderQueue[2] = salad;
+    orders[0] = burger;
+    orders[1] = pizza;
+    orders[2] = salad;
 
     while (TRUE) 
     {
@@ -227,13 +228,13 @@ void CNConfig() {
 // and put it on another timer for this project.
 
 void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
-    //eKey key = K_NONE;
+    eKey key = K_NONE;
     
     // 1. Disable CN interrupts
     IEC1bits.CNDIE = 0;     
 
     // 2. Debounce keys for 10ms
-    for (int i=0; i<1426; i++) {}
+    for (int i=0; i<2840; i++) {}
 
     // 3. Handle "button locking" logic
 
@@ -279,15 +280,19 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
 
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
-        display_num();
-        //if (mode = MODE4){
-        //    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
-        //}
     
     }
     
     // if any key has been pressed, update next state and outputs
     if (key != K_NONE) {
+        char a[16];
+        sprintf(a,"%x",key);
+        LCD_WriteStringAtPos(a,1,0);
+        
+        delay_ms(500);
+        
+        display_num();
+        
         handle_new_keypad_press(key) ;
     }
     
@@ -331,6 +336,7 @@ void handle_new_keypad_press(eKey key)
 void mode1(){
     mode = MODE1;
 
+    LCD_WriteStringAtPos("  Select Mode    ",0,0);
     LCD_WriteStringAtPos("A-Place B-Status     ",1,0);
 }
 
@@ -338,7 +344,10 @@ void mode2(){
     mode = MODE2;
 
     LCD_WriteStringAtPos("Place your Order     ",0,0);
-    LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
+    char array[16];
+    sprintf(array, " %d - %s", orders[index].orderNumber, orders[index].foodItem);
+    LCD_WriteStringAtPos("                ", 1, 0);
+    LCD_WriteStringAtPos(array, 1, 0);
 }
 
 void mode3(){
@@ -375,6 +384,7 @@ void mode3(){
 
     // Display confirmation on LCD
     LCD_WriteStringAtPos("Order placed for", 0, 0);
+    LCD_WriteStringAtPos("                ",1,0);
     LCD_WriteStringAtPos(food_item, 1, 0); // Display the food item name
 
     // Display the 4-digit code on the SSD
@@ -385,7 +395,7 @@ void mode3(){
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0); // Function to display the number on the SSD
 
     // Delay for a short period to allow the user to see the confirmation
-    delay_ms(5000);
+    delay_ms(500);
 }
 
 void mode4(){
@@ -404,6 +414,8 @@ void mode5(){
 
 void mode6(){
     mode = MODE6;
+    
+    SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
 
     LCD_WriteStringAtPos("    Error!     ",0,0);
     LCD_WriteStringAtPos(err_msg,1,0); //Max 16 characters
@@ -424,26 +436,37 @@ void mode1_input(eKey key){
 void mode2_input(eKey key){
     switch(key){
         case K_A:
-            if ((index - 1) == sizeof(orderQueue)){
+            if (index == 2){
                 index = 0;
-                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
+                char array[16];
+                sprintf(array," %d - %s", orders[index].orderNumber, orders[index].foodItem);
+                LCD_WriteStringAtPos("                ",1,0);
+                LCD_WriteStringAtPos(array,1,0);
             } else {
                 index++;
-                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
+                char array[16];
+                sprintf(array," %d - %s", orders[index].orderNumber, orders[index].foodItem);
+                LCD_WriteStringAtPos("                ",1,0);
+                LCD_WriteStringAtPos(array,1,0);
             }
         break;
         case K_B:
             if (index = 0){
-                index = sizeof(orderQueue);
-                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
+                index = 2;
+                char array[16];
+                sprintf(array," %d - %s", orders[index].orderNumber, orders[index].foodItem);
+                LCD_WriteStringAtPos("                ",1,0);
+                LCD_WriteStringAtPos(array,1,0);
             } else {
                 index = index - 1;
-                LCD_WriteStringAtPos((char)&orderQueue[index].code + "-" + (char)&orderQueue[index].foodItem,1,0);
+                char array[16];
+                sprintf(array," %d - %s", orders[index].orderNumber, orders[index].foodItem);
+                LCD_WriteStringAtPos("                ",1,0);
+                LCD_WriteStringAtPos(array,1,0);
             }
         break;
         case K_E:
-            food_item = orderQueue[index].foodItem;
-            food_index = orderQueue[index].code;
+            food_item = orders[index].foodItem;
             mode3();
         break;
     }
@@ -452,6 +475,7 @@ void mode2_input(eKey key){
 void mode3_input(eKey key){
     switch(key){
         case K_E:
+            SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
             mode1();
         break;
     }
@@ -460,7 +484,13 @@ void mode3_input(eKey key){
 void mode4_input(eKey key){
     switch(key){
         case K_E:
-            mode3();
+            for (int b = 0; b < sizeof(orderQueue); b++) {
+                if (food_index = orderQueue[b].code) {
+                    mode5();
+                }
+            }
+            err_msg = "  Invalid Code  ";
+            mode6();
         break;
     }
 }
@@ -468,13 +498,7 @@ void mode4_input(eKey key){
 void mode5_input(eKey key){
     switch(key){
         case K_E:
-            for (int b = 0; b < sizeof(orderQueue); b++) {
-                if (food_index = orderQueue[b].code) {
-                    mode5();
-                }
-            }
-            err_msg = "Invalid Code";
-            mode6();
+            mode1();
         break;
     }
 }
