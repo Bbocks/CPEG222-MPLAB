@@ -92,16 +92,26 @@ void setupTimer4(void);
 void setupLEDs(void);
 
 int digit_count = 0;
-int vals[3] = {0,0,0,0};
+int vals[4] = {0,0,0,0};
 int count = 3;
 
+typedef struct {
+    char foodItem[20];
+    int orderNumber;
+    int status; // 0: In Queue, 1: In Prep, 2: Ready, 3: Completed
+    int code; // Unique 4-digit code
+} Order;
+
 //All have a max length of 16 characters
-char err_msg = "";
-char food_item = "";
-char food_status = "";
-char food_index = ""; //Also the food code
-char food_arr[];
-char food_index_arr[];
+char *err_msg = "";
+char *food_item = "";
+char *food_status = "";
+char *food_index = ""; //Also the food code
+int QUE_SIZE = 8;
+Order orderQueue[QUE_SIZE];
+int orderCount = 0; // To keep track of number of orders
+int currentOrderCode = 0; // Store the current generated order code
+
 int index = 0;
 
 int main(void) {
@@ -256,7 +266,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
 
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
-        //display_num();
+        display_num();
         //SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
     
     }
@@ -312,15 +322,51 @@ void mode1(){
 void mode2(){
     mode = MODE2;
 
-    LCD_WriteStringAtPos("    Place your Order     ",0,0);
-    LCD_WriteStringAtPos(food_index + "-" + food_arr[index],1,0);
+    LCD_WriteStringAtPos("Place your Order     ",0,0);
+    LCD_WriteStringAtPos(*food_index + "-" + *food_arr[index],1,0);
 }
 
 void mode3(){
     mode = MODE3;
 
-    LCD_WriteStringAtPos("    Order Placed For     ",0,0);
-    LCD_WriteStringAtPos(food_item,1,0);
+    // Play the jingle for order confirmation
+    turnOnAlarm();
+    delay_ms(10);
+    turnOffAlarm();
+    turnOnAlarm();
+    delay_ms(10);
+    turnOffAlarm();
+    turnOnAlarm();
+    delay_ms(10);
+    turnOffAlarm();
+    for (int j = 0; j < 4; j++) {
+        vals[j] = -1;
+    }
+    count = 3;
+
+    // Generate a unique 4-digit code for the order
+    currentOrderCode = generateUniqueCode();
+
+    // Add the order to the queue
+    if (orderCount < QUEUE_SIZE) {
+        Order newOrder;
+        strcpy(newOrder.foodItem, food_item); // Copy the food item name
+        newOrder.orderNumber = orderCount + 1; // Incremental order number
+        newOrder.status = 0; // Status: In Queue
+        newOrder.code = currentOrderCode; // Assign the unique code
+        
+        orderQueue[orderCount++] = newOrder; // Add to queue and increment order count
+    }
+
+    // Display confirmation on LCD
+    LCD_WriteStringAtPos("Order placed for", 0, 0);
+    LCD_WriteStringAtPos(food_item, 1, 0); // Display the food item name
+
+    // Display the 4-digit code on the SSD
+    SSD_WriteNumber(currentOrderCode); // Function to display the number on the SSD
+
+    // Delay for a short period to allow the user to see the confirmation
+    delay_ms(500);
 }
 
 void mode4(){
@@ -361,24 +407,25 @@ void mode2_input(eKey key){
         case K_A:
             if ((index - 1) == sizeof(food_arr)){
                 index = 0;
-                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
             } else {
                 index++;
-                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
             }
         break;
         case K_B:
             if (index = 0){
                 index = sizeof(food_arr);
-                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
             } else {
                 index = index - 1;
-                LCD_WriteStringAtPos(food_index_arr[index] + "-" + food_arr[index],1,0);
+                LCD_WriteStringAtPos(*food_index_arr[index] + "-" + *food_arr[index],1,0);
             }
         break;
         case K_E:
             food_item = food_arr[index];
             food_index = food_index_arr[index];
+            mode3();
         break;
     }
 }
@@ -573,4 +620,24 @@ void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
 
     // Clear the interrupt flag
     IFS0bits.T4IF = 0;
+}
+
+int generateUniqueCode() {
+    int code;
+    bool isUnique;
+    
+    do {
+        code = rand() % (MAX_CODE - MIN_CODE + 1) + MIN_CODE; // Generate a random 4-digit code
+        isUnique = true;
+
+        // Check if the code is unique in the order queue
+        for (int i = 0; i < orderCount; i++) {
+            if (orderQueue[i].code == code) {
+                isUnique = false; // Code already exists, generate a new one
+                break;
+            }
+        }
+    } while (!isUnique);
+    
+    return code;
 }
