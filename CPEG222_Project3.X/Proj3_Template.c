@@ -113,10 +113,9 @@ typedef struct {
 char *err_msg = "";
 char *food_item = "";
 char *food_status = "";
-int food_index[]; //Also the food code
 Order orders[MAX_ORDERS];
 Order orderQueue[MAX_ORDERS];
-int orderCount = 8; // To keep track of number of orders
+int orderCount = 0; // To keep track of number of orders
 int number_set = 1;
 int ssd1 = -1;
 int ssd2 = -1;
@@ -400,7 +399,6 @@ void mode3(){
     food_num3 = digit2;
     food_num4 = digit1;
     
-    
    
     // Add the order to the queue
     if (orderCount < MAX_ORDERS) {
@@ -412,27 +410,21 @@ void mode3(){
         newOrder.num2 = digit2;
         newOrder.num3 = digit3;
         newOrder.num4 = digit4;// Assign the unique code
-       
-        food_index[0] = newOrder.num1;
-        food_index[1] = newOrder.num2;
-        food_index[2] = newOrder.num3;
-        food_index[3] = newOrder.num4;
         
         food.status = newOrder.status;
         
-        orderQueue[orderCount++] = newOrder; // Add to queue and increment order count
+        orderQueue[orderCount] = newOrder; // Add to queue and increment order count
+        orderCount++;
     }
     else if (orderCount > MAX_ORDERS){
         err_msg = "  Queue Full  ";
-        //mode6();
+        mode6();
     }
 
     // Display confirmation on LCD
     LCD_WriteStringAtPos("Order placed for", 0, 0);
     LCD_WriteStringAtPos("                ",1,0);
     LCD_WriteStringAtPos(food_item, 1, 0); // Display the food item name
-
-    // Display the 4-digit code on the SSD
    
 
     // Delay for a short period to allow the user to see the confirmation
@@ -450,13 +442,13 @@ void mode5(){
     mode = MODE5;
 
     LCD_WriteStringAtPos("                ",0,0);
-    LCD_WriteStringAtPos("   " + food_item + "   ",0,0);
+    LCD_WriteStringAtPos(food_item,0,0);
     LCD_WriteStringAtPos("                ",1,0);
-    if (orderQueue[].status == 0) {
+    if (food.status == 0) {
         LCD_WriteStringAtPos("    In Queue    ",1,0);
-    } else if (orderQueue[].status == 1) {
+    } else if (food.status == 1) {
         LCD_WriteStringAtPos("    In Prep     ",1,0);
-    } else if (orderQueue[].status == 2) {
+    } else if (food.status == 2) {
         LCD_WriteStringAtPos("     Ready      ",1,0);
     }
     delay_ms(500);
@@ -605,19 +597,14 @@ void mode4_input(eKey key) {
             vals[count] = -1;
             break;
         case K_E:   
-            1==1;
-            char array1[16];
-            char array2[16];
-            sprintf(array1,"%d%d%d%d",food_num1,food_num2,food_num3,food_num4);
-            sprintf(array2,"%d%d%d%d",vals[3],vals[2],vals[1],vals[0]);
-            LCD_WriteStringAtPos(array1,0,0);
-            LCD_WriteStringAtPos(array2,1,0);
-            delay_ms(2000);
-            if ((food_num1 == vals[3]) && (food_num2 == vals[2]) && (food_num3 == vals[1]) && (food_num4 == vals[0])) {
-                mode5();              // Go to mode 5 if code matches an order
-            } else {
-                mode6();             // Go to mode 6 if code is invalid
-                LCD_WriteStringAtPos(" Invalid Code ", 1, 0);
+            for (int l = 0; l < 8; l++) {
+                if ((orderQueue[l].num4 == vals[3]) && (orderQueue[l].num3 == vals[2]) && (orderQueue[l].num2 == vals[1]) && (orderQueue[l].num1 == vals[0])) {
+                    food.status = orderQueue[l].status;
+                    mode5();             // Go to mode 5 if code matches an order
+                } else {
+                    mode6();             // Go to mode 6 if code is invalid
+                    LCD_WriteStringAtPos(" Invalid Code ", 1, 0);
+                }
             }
             break;
 
