@@ -124,6 +124,10 @@ int ssd3 = -1;
 int ssd4 = -1;
 int index = 0;
 int valc = 0;
+int food_num1 = 0;
+int food_num2 = 0;
+int food_num3 = 0;
+int food_num4 = 0;
 Order food;
 
 
@@ -390,6 +394,13 @@ void mode3(){
     int digit4 = code % 10;          // Units place
     // Display the code on SSD
     SSD_WriteDigits(digit1, digit2, digit3, digit4, 0, 0, 0, 0);
+    
+    food_num1 = digit4;
+    food_num2 = digit3;
+    food_num3 = digit2;
+    food_num4 = digit1;
+    
+    
    
     // Add the order to the queue
     if (orderCount < MAX_ORDERS) {
@@ -406,7 +417,9 @@ void mode3(){
         food_index[1] = newOrder.num2;
         food_index[2] = newOrder.num3;
         food_index[3] = newOrder.num4;
-       
+        
+        food.status = newOrder.status;
+        
         orderQueue[orderCount++] = newOrder; // Add to queue and increment order count
     }
     else if (orderCount > MAX_ORDERS){
@@ -437,9 +450,15 @@ void mode5(){
     mode = MODE5;
 
     LCD_WriteStringAtPos("                ",0,0);
-    LCD_WriteStringAtPos(food_item,0,0);
+    LCD_WriteStringAtPos("   " + food_item + "   ",0,0);
     LCD_WriteStringAtPos("                ",1,0);
-    LCD_WriteStringAtPos(food_status,1,0);
+    if (orderQueue[].status == 0) {
+        LCD_WriteStringAtPos("    In Queue    ",1,0);
+    } else if (orderQueue[].status == 1) {
+        LCD_WriteStringAtPos("    In Prep     ",1,0);
+    } else if (orderQueue[].status == 2) {
+        LCD_WriteStringAtPos("     Ready      ",1,0);
+    }
     delay_ms(500);
 }
 
@@ -498,7 +517,6 @@ void mode2_input(eKey key){
         break;
         case K_E:
             food_item = orders[index].foodItem;
-            food = orders[index];
             mode3();
         break;
     }
@@ -586,8 +604,16 @@ void mode4_input(eKey key) {
             count++;
             vals[count] = -1;
             break;
-        case K_E:            
-            if ((food.num1 == vals[0]) && (food.num2 == vals[1]) && (food.num3 == vals[2]) && (food.num4 == vals[3])) {
+        case K_E:   
+            1==1;
+            char array1[16];
+            char array2[16];
+            sprintf(array1,"%d%d%d%d",food_num1,food_num2,food_num3,food_num4);
+            sprintf(array2,"%d%d%d%d",vals[3],vals[2],vals[1],vals[0]);
+            LCD_WriteStringAtPos(array1,0,0);
+            LCD_WriteStringAtPos(array2,1,0);
+            delay_ms(2000);
+            if ((food_num1 == vals[3]) && (food_num2 == vals[2]) && (food_num3 == vals[1]) && (food_num4 == vals[0])) {
                 mode5();              // Go to mode 5 if code matches an order
             } else {
                 mode6();             // Go to mode 6 if code is invalid
@@ -604,6 +630,7 @@ void mode4_input(eKey key) {
 void mode5_input(eKey key){
     switch(key){
         case K_E:
+            SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
             mode1();
         break;
     }
