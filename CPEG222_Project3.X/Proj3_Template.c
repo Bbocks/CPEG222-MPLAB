@@ -203,9 +203,9 @@ macro_enable_interrupts();  // enable interrupts at CPU
     }
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
    
-    Order burger = {"Burger", 1, "In Queue", };
-    Order pizza = {"Pizza", 2, "In Queue", };
-    Order salad = {"Salad", 3, "In Queue", };
+    Order burger = {"Burger", 1, 0, };
+    Order pizza = {"Pizza", 2, 0, };
+    Order salad = {"Salad", 3, 0, };
    
     orders[0] = burger;
     orders[1] = pizza;
@@ -405,7 +405,7 @@ void mode3(){
         Order newOrder;
         strcpy(newOrder.foodItem, food_item); // Copy the food item name
         newOrder.orderNumber = orderCount + 1; // Incremental order number
-        newOrder.status = 0; // Status: In Queue
+        newOrder.status = 1; // Status: In Queue
         newOrder.num1 = digit1;
         newOrder.num2 = digit2;
         newOrder.num3 = digit3;
@@ -444,11 +444,11 @@ void mode5(){
     LCD_WriteStringAtPos("                ",0,0);
     LCD_WriteStringAtPos(food_item,0,0);
     LCD_WriteStringAtPos("                ",1,0);
-    if (food.status == 0) {
+    if (food.status == 1) {
         LCD_WriteStringAtPos("    In Queue    ",1,0);
-    } else if (food.status == 1) {
-        LCD_WriteStringAtPos("    In Prep     ",1,0);
     } else if (food.status == 2) {
+        LCD_WriteStringAtPos("    In Prep     ",1,0);
+    } else if (food.status == 3) {
         LCD_WriteStringAtPos("     Ready      ",1,0);
     }
     delay_ms(500);
@@ -590,11 +590,13 @@ void mode4_input(eKey key) {
             for (int j = 0; j < 4; j++) {
                 vals[j] = -1;
             }
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
             count = 3;
             break;
         case K_D:
             count++;
             vals[count] = -1;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
             break;
         case K_E:   
             for (int l = 0; l < 8; l++) {
