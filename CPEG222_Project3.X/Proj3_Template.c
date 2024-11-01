@@ -49,7 +49,7 @@
 #define PB_FRQ (SYS_FREQ / 8)  // Peripheral clock is SYS_FREQ divided by 8
 #define TMR4_PERIOD ((PB_FRQ / 256) / 1)  // Timer4 period for 1Hz, with 256 prescaler
 
-#define QUEUE_SIZE 8
+#define MAX_ORDERS 8
 
 
 unsigned short rgSinSamples [] = {
@@ -103,22 +103,32 @@ typedef struct {
     char foodItem[20];
     int orderNumber;
     int status; // 0: In Queue, 1: In Prep, 2: Ready, 3: Completed
-    int code; // Unique 4-digit code
+    int num1;
+    int num2;
+    int num3;
+    int num4;// Unique 4-digit code
 } Order;
 
 //All have a max length of 16 characters
 char *err_msg = "";
 char *food_item = "";
 char *food_status = "";
-char *food_index = ""; //Also the food code
-Order orders[QUEUE_SIZE];
-Order orderQueue[QUEUE_SIZE];
-int orderCount = 0; // To keep track of number of orders
-int currentOrderCode = 0; // Store the current generated order code
-int MAX_CODE = 9999;
-int MIN_CODE = 0000;
-
+int food_index[]; //Also the food code
+Order orders[MAX_ORDERS];
+Order orderQueue[MAX_ORDERS];
+int orderCount = 8; // To keep track of number of orders
+int number_set = 1;
+int ssd1 = -1;
+int ssd2 = -1;
+int ssd3 = -1;
+int ssd4 = -1;
 int index = 0;
+int valc = 0;
+Order food;
+
+
+
+
 
 int main(void) {
 
@@ -127,6 +137,7 @@ int main(void) {
     LCD_Init() ;
     ACL_Init();
     SSD_Init();
+    LED_Init();
 
     float rgACLGVals[3];
     ACL_ReadGValues(rgACLGVals);
@@ -147,80 +158,80 @@ int main(void) {
     TRISDbits.TRISD9 = 1;
     TRISDbits.TRISD10 = 1;
     TRISDbits.TRISD11 = 1;
-    
+   
     // You need to enable all the rows
     R1 = R2 = R3 = R4 = 0;
-    
+   
     LCD_WriteStringAtPos("  Select Mode    ",0,0);
     LCD_WriteStringAtPos("A-Place B-Status     ",1,0);
-    
+   
     CNConfig();
     setupLEDs();   // Set up LEDs for decrementing
     setupTimer4(); // Set up Timer4 for LED decrementing
 
     // the following lines configure interrupts to control the speaker
-	T3CONbits.ON = 0;   	// turn off Timer3
-	OC1CONbits.ON = 0;  	// Turn off OC1
-    	/* The following code sets up the alarm timer and interrupts */
-	tris_A_OUT = 0;    
-	rp_A_OUT = 0x0C; // 1100 = OC1
-    	// disable analog (set pins as digital)
-	ansel_A_OUT = 0;
-    
-	T3CONbits.TCKPS = 0; 	//1:1 prescale value
-	T3CONbits.TGATE = 0; 	//not gated input (the default)
-	T3CONbits.TCS = 0;   	//PCBLK input (the default)
-    
-	OC1CONbits.ON = 0;   	// Turn off OC1 while doing setup.
-	OC1CONbits.OCM = 6;  	// PWM mode on OC1; Fault pin is disabled
-	OC1CONbits.OCTSEL = 1;   // Timer3 is the clock source for this Output Compare module
-    
-	IPC3bits.T3IP = 7;  	// interrupt priority
-	IPC3bits.T3IS = 3;  	// interrupt subpriority
-    
-	macro_enable_interrupts();  // enable interrupts at CPU
-    
+T3CONbits.ON = 0;   // turn off Timer3
+OC1CONbits.ON = 0;   // Turn off OC1
+    /* The following code sets up the alarm timer and interrupts */
+tris_A_OUT = 0;    
+rp_A_OUT = 0x0C; // 1100 = OC1
+    // disable analog (set pins as digital)
+ansel_A_OUT = 0;
+   
+T3CONbits.TCKPS = 0; //1:1 prescale value
+T3CONbits.TGATE = 0; //not gated input (the default)
+T3CONbits.TCS = 0;   //PCBLK input (the default)
+   
+OC1CONbits.ON = 0;   // Turn off OC1 while doing setup.
+OC1CONbits.OCM = 6;   // PWM mode on OC1; Fault pin is disabled
+OC1CONbits.OCTSEL = 1;   // Timer3 is the clock source for this Output Compare module
+   
+IPC3bits.T3IP = 7;   // interrupt priority
+IPC3bits.T3IS = 3;   // interrupt subpriority
+   
+macro_enable_interrupts();  // enable interrupts at CPU
+   
     turnOffAlarm();
-    
+   
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
     delay_ms(10);
     for (int i = 0; i < 4; i++) {
         vals[i] = -1;
     }
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
-    
+   
     Order burger = {"Burger", 1, "In Queue", };
     Order pizza = {"Pizza", 2, "In Queue", };
     Order salad = {"Salad", 3, "In Queue", };
-    
+   
     orders[0] = burger;
     orders[1] = pizza;
     orders[2] = salad;
 
-    while (TRUE) 
+    while (TRUE)
     {
     }
-} 
+}
 
 
 void CNConfig() {
     /* Make sure vector interrupts is disabled prior to configuration */
     macro_disable_interrupts;
-    
+   
     // Complete the following configuration of CN interrupts, then uncomment them
     CNCONDbits.ON = 1;   //all port D pins to trigger CN interrupts
-    CNEND = 0xF00;      	//configure PORTD pins 8-11 as CN pins
-    CNPUD = 0xF00;      	//enable pullups on PORTD pins 8-11
+    CNEND = 0xF00;       //configure PORTD pins 8-11 as CN pins
+    CNPUD = 0xF00;       //enable pullups on PORTD pins 8-11
 
-    IPC8bits.CNIP = 5;  	// set CN priority to  5
-    IPC8bits.CNIS = 3;  	// set CN sub-priority to 3
+    IPC8bits.CNIP = 5;   // set CN priority to  5
+    IPC8bits.CNIS = 3;   // set CN sub-priority to 3
 
-    IFS1bits.CNDIF = 0;   	//Clear interrupt flag status bit
-    IEC1bits.CNDIE = 1;   	//Enable CN interrupt on port D
+    IFS1bits.CNDIF = 0;   //Clear interrupt flag status bit
+    IEC1bits.CNDIE = 1;   //Enable CN interrupt on port D
 
-    
+   
     int j = PORTD;             //read port to clear mismatch on CN pins
-    macro_enable_interrupts();	// re-enable interrupts
+    macro_enable_interrupts(); // re-enable interrupts
 }
 
 // This ISR is for the change notice interrupt. The timer will use another interrupt.
@@ -229,12 +240,12 @@ void CNConfig() {
 
 void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
     eKey key = K_NONE;
-    
+   
     // 1. Disable CN interrupts
-    IEC1bits.CNDIE = 0;     
+    IEC1bits.CNDIE = 0;    
 
     // 2. Debounce keys for 10ms
-    for (int i=0; i<2840; i++) {}
+    for (int i=0; i<2000; i++) {}
 
     // 3. Handle "button locking" logic
 
@@ -249,29 +260,29 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
         new_press = TRUE;
 
         // 4. Decode which key was pressed
-        
-        // check first row 
+       
+        // check first row
         R1 = 0; R2 = R3 = R4 = 1;
         if (C1 == 0) { key = K1; }      // first column
         else if (C2 == 0) { key = K2; } // second column
         else if (C3 == 0) { key = K3; } // third column
         else if (C4 == 0) { key = K_A; } // fourth column
 
-        // check second row 
+        // check second row
         R2 = 0; R1 = R3 = R4 = 1;
         if (C1 == 0) { key = K4; }
         else if (C2 == 0) { key = K5; }
         else if (C3 == 0) { key = K6; }
         else if (C4 == 0) { key = K_B; }
 
-        // check third row 
+        // check third row
         R3 = 0; R1 = R2 = R4 = 1;
         if (C1 == 0) { key = K7; }
         else if (C2 == 0) { key = K8; }
         else if (C3 == 0) { key = K9; }
         else if (C4 == 0) { key = K_C; }
 
-        // check fourth row 
+        // check fourth row
         R4 = 0; R1 = R2 = R3 = 1;
         if (C1 == 0) { key = K0; }
         else if (C2 == 0) { key = K_F; }
@@ -280,30 +291,30 @@ void __ISR(_CHANGE_NOTICE_VECTOR) CN_Handler(void) {
 
         // re-enable all the rows for the next round
         R1 = R2 = R3 = R4 = 0;
-    
+   
     }
-    
+   
     // if any key has been pressed, update next state and outputs
     if (key != K_NONE) {
         char a[16];
         sprintf(a,"%x",key);
         LCD_WriteStringAtPos(a,1,0);
-        
+       
         delay_ms(500);
-        
-        display_num();
-        
+       
+       // display_num();
+       
         handle_new_keypad_press(key) ;
     }
-    
-    
+   
+   
     int j = PORTD;              //read port to clear mismatch on CN pints
-    
+   
     // 5. Clear the interrupt flag
-    IFS1bits.CNDIF = 0;     
+    IFS1bits.CNDIF = 0;    
 
     // 6. Reenable CN interrupts
-    IEC1bits.CNDIE = 1; 
+    IEC1bits.CNDIE = 1;
 }
 
 
@@ -354,6 +365,7 @@ void mode3(){
     mode = MODE3;
 
     // Play the jingle for order confirmation
+   
     turnOnAlarm();
     delay_ms(10);
     turnOffAlarm();
@@ -367,19 +379,39 @@ void mode3(){
         vals[j] = -1;
     }
     count = 3;
-
     // Generate a unique 4-digit code for the order
-    currentOrderCode = generateUniqueCode();
+ 
+    int code = rand() % 10000; // Random number between 0 and 9999
 
+    // Extract individual digits
+    int digit1 = (code / 1000) % 10; // Thousands place
+    int digit2 = (code / 100) % 10;  // Hundreds place
+    int digit3 = (code / 10) % 10;   // Tens place
+    int digit4 = code % 10;          // Units place
+    // Display the code on SSD
+    SSD_WriteDigits(digit1, digit2, digit3, digit4, 0, 0, 0, 0);
+   
     // Add the order to the queue
-    if (orderCount < QUEUE_SIZE) {
+    if (orderCount < MAX_ORDERS) {
         Order newOrder;
         strcpy(newOrder.foodItem, food_item); // Copy the food item name
         newOrder.orderNumber = orderCount + 1; // Incremental order number
         newOrder.status = 0; // Status: In Queue
-        newOrder.code = currentOrderCode; // Assign the unique code
-        
+        newOrder.num1 = digit1;
+        newOrder.num2 = digit2;
+        newOrder.num3 = digit3;
+        newOrder.num4 = digit4;// Assign the unique code
+       
+        food_index[0] = newOrder.num1;
+        food_index[1] = newOrder.num2;
+        food_index[2] = newOrder.num3;
+        food_index[3] = newOrder.num4;
+       
         orderQueue[orderCount++] = newOrder; // Add to queue and increment order count
+    }
+    else if (orderCount > MAX_ORDERS){
+        err_msg = "  Queue Full  ";
+        //mode6();
     }
 
     // Display confirmation on LCD
@@ -388,33 +420,32 @@ void mode3(){
     LCD_WriteStringAtPos(food_item, 1, 0); // Display the food item name
 
     // Display the 4-digit code on the SSD
-    vals[0] = currentOrderCode % 1000;
-    vals[1] = currentOrderCode % 1000;
-    vals[2] = currentOrderCode % 1000;
-    vals[3] = currentOrderCode % 1000;
-    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0); // Function to display the number on the SSD
+   
 
     // Delay for a short period to allow the user to see the confirmation
     delay_ms(500);
 }
 
-void mode4(){
+void mode4() {
     mode = MODE4;
-
-    LCD_WriteStringAtPos("  Order Lookup  ",0,0);
-    LCD_WriteStringAtPos("   Enter Code   ",1,0);
+    
+    LCD_WriteStringAtPos("  Order Lookup ", 0, 0);
+    LCD_WriteStringAtPos("   Enter Code   ", 1, 0);
 }
 
 void mode5(){
     mode = MODE5;
 
+    LCD_WriteStringAtPos("                ",0,0);
     LCD_WriteStringAtPos(food_item,0,0);
+    LCD_WriteStringAtPos("                ",1,0);
     LCD_WriteStringAtPos(food_status,1,0);
+    delay_ms(500);
 }
 
 void mode6(){
     mode = MODE6;
-    
+   
     SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
 
     LCD_WriteStringAtPos("    Error!     ",0,0);
@@ -451,7 +482,7 @@ void mode2_input(eKey key){
             }
         break;
         case K_B:
-            if (index = 0){
+            if (index == 0){
                 index = 2;
                 char array[16];
                 sprintf(array," %d - %s", orders[index].orderNumber, orders[index].foodItem);
@@ -467,12 +498,14 @@ void mode2_input(eKey key){
         break;
         case K_E:
             food_item = orders[index].foodItem;
+            food = orders[index];
             mode3();
         break;
     }
 }
 
 void mode3_input(eKey key){
+    int times = 0;
     switch(key){
         case K_E:
             SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
@@ -480,20 +513,93 @@ void mode3_input(eKey key){
         break;
     }
 }
+   
 
-void mode4_input(eKey key){
+
+void mode4_input(eKey key) {
+    // Display initial prompts on the LCD
+    LCD_WriteStringAtPos("  Order lookup  ", 0, 0);
+    LCD_WriteStringAtPos("   Enter code   ", 1, 0);
+
+    // Process keypad input
+
     switch(key){
-        case K_E:
-            for (int b = 0; b < sizeof(orderQueue); b++) {
-                if (food_index = orderQueue[b].code) {
-                    mode5();
-                }
+        case K0:
+            vals[count] = 0;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K1:
+            vals[count] = 1;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K2:
+            vals[count] = 2;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K3:
+            vals[count] = 3;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K4:
+            vals[count] = 4;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K5:
+            vals[count] = 5;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K6:
+            vals[count] = 6;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K7:
+            vals[count] = 7;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K8:
+            vals[count] = 8;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        case K9:
+            vals[count] = 9;
+            count--;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
+            break;
+        //case K_A:
+        //case K_B:
+        case K_C:
+            for (int j = 0; j < 4; j++) {
+                vals[j] = -1;
             }
-            err_msg = "  Invalid Code  ";
-            mode6();
-        break;
+            count = 3;
+            break;
+        case K_D:
+            count++;
+            vals[count] = -1;
+            break;
+        case K_E:            
+            if ((food.num1 == vals[0]) && (food.num2 == vals[1]) && (food.num3 == vals[2]) && (food.num4 == vals[3])) {
+                mode5();              // Go to mode 5 if code matches an order
+            } else {
+                mode6();             // Go to mode 6 if code is invalid
+                LCD_WriteStringAtPos(" Invalid Code ", 1, 0);
+            }
+            break;
+
+        default:
+            break;
     }
 }
+
 
 void mode5_input(eKey key){
     switch(key){
@@ -513,47 +619,47 @@ void mode6_input(eKey key){
 
 void delay_ms(int milliseconds)
 {
-	int i;
-	for (i = 0; i < milliseconds * LOOPS_NEEDED_TO_DELAY_ONE_MS; i++)
-	{}
+int i;
+for (i = 0; i < milliseconds * LOOPS_NEEDED_TO_DELAY_ONE_MS; i++)
+{}
 }
 
 void turnOnAlarm()
 {
-	//set up alarm
-	PR3 = (int)((float)((float)PB_FRQ/TMR_FREQ_SINE) + 0.5);          	 
-	idxAudioBuf = 0;
-	cntAudioBuf = RGSIN_SIZE;
-	pAudioSamples = rgSinSamples;
+//set up alarm
+PR3 = (int)((float)((float)PB_FRQ/TMR_FREQ_SINE) + 0.5);          
+idxAudioBuf = 0;
+cntAudioBuf = RGSIN_SIZE;
+pAudioSamples = rgSinSamples;
 
-	// load first value
-	OC1RS = pAudioSamples[0];
-	TMR3 = 0;
+// load first value
+OC1RS = pAudioSamples[0];
+TMR3 = 0;
 
-	T3CONbits.ON = 1;    	//turn on Timer3
-	OC1CONbits.ON = 1;   	// Start the OC1 module  
-	IEC0bits.T3IE = 1;  	// enable Timer3 interrupt    
-	IFS0bits.T3IF = 0;  	// clear Timer3 interrupt flag
+T3CONbits.ON = 1;     //turn on Timer3
+OC1CONbits.ON = 1;   // Start the OC1 module  
+IEC0bits.T3IE = 1;   // enable Timer3 interrupt    
+IFS0bits.T3IF = 0;   // clear Timer3 interrupt flag
 }
 
 void turnOffAlarm()
 {
-	T3CONbits.ON = 0;   	// turn off Timer3
-	OC1CONbits.ON = 0;  	// Turn off OC1
+T3CONbits.ON = 0;   // turn off Timer3
+OC1CONbits.ON = 0;   // Turn off OC1
 }
 
 void __ISR(_TIMER_3_VECTOR, IPL7AUTO) Timer3ISR(void)
 {  
     // play sine
-	// load sine value into OC register
-	OC1RS = 4*pAudioSamples[(++idxAudioBuf) % cntAudioBuf];
-    
-	IFS0bits.T3IF = 0;  	// clear Timer3 interrupt flag
+// load sine value into OC register
+OC1RS = 4*pAudioSamples[(++idxAudioBuf) % cntAudioBuf];
+   
+IFS0bits.T3IF = 0;   // clear Timer3 interrupt flag
 }
 
 void display_num() {
     switch(key){
-        case K0: 
+        case K0:
             vals[count] = 0;
             count--;
             break;
@@ -569,23 +675,23 @@ void display_num() {
             vals[count] = 3;
             count--;
             break;
-        case K4: 
+        case K4:
             vals[count] = 4;
             count--;
             break;
-        case K5: 
+        case K5:
             vals[count] = 5;
             count--;
             break;
-        case K6: 
+        case K6:
             vals[count] = 6;
             count--;
             break;
-        case K7: 
+        case K7:
             vals[count] = 7;
             count--;
             break;
-        case K8: 
+        case K8:
             vals[count] = 8;
             count--;
             break;
@@ -653,7 +759,7 @@ void setupLEDs(void) {
     TRISAbits.TRISA7 = 0; // Set RA7 (LD7) as output
 
     // Initially turn on all LEDs
-    LATA = 0xFF;
+    //LATA = 0xFF;
 }
 
 void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
@@ -665,28 +771,8 @@ void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
     }
 
     // Update LED states: turn on only the `led_count` most significant LEDs
-    LATA = (0xFF >> (8 - led_count));  // Shift the bits to light the correct number of LEDs
+    //LATA = (0xFF >> (8 - led_count));  // Shift the bits to light the correct number of LEDs
 
     // Clear the interrupt flag
     IFS0bits.T4IF = 0;
-}
-
-int generateUniqueCode() {
-    int code;
-    bool isUnique = FALSE;  
-    
-    do {
-        code = rand() % (MAX_CODE - MIN_CODE + 1) + MIN_CODE; // Generate a random 4-digit code
-        isUnique = TRUE;
-
-        // Check if the code is unique in the order queue
-        for (int i = 0; i < orderCount; i++) {
-            if (orderQueue[i].code == code) {
-                isUnique = FALSE; // Code already exists, generate a new one
-                break;
-            }
-        }
-    } while (!isUnique);
-    
-    return code;
 }
