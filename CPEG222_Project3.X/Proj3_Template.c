@@ -604,8 +604,8 @@ void mode4_input(eKey key) {
                     food.status = orderQueue[l].status;
                     mode5();             // Go to mode 5 if code matches an order
                 } else {
+                    err_msg = "  Invalid Code  ";
                     mode6();             // Go to mode 6 if code is invalid
-                    LCD_WriteStringAtPos(" Invalid Code ", 1, 0);
                 }
             }
             break;
@@ -778,17 +778,63 @@ void setupLEDs(void) {
     //LATA = 0xFF;
 }
 
+void LEDsolid(int count){
+    if (count == 0){
+        LATA &= 0x00FE;
+    }
+    if (count == 0){
+        LATA &= 0x00FC;
+    }
+    if (count == 0){
+        LATA &= 0x00F8;
+    }
+    if (count == 0){
+        LATA &= 0x00F0;
+    }
+    if (count == 0){
+        LATA &= 0x00E0;
+    }
+    if (count == 0){
+        LATA &= 0x00C0;
+    }
+    if (count == 0){
+        LATA &= 0x0080;          
+    }
+    if (count == 0){
+        LATA &= 0x0000;
+    }
+}
 void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
     // Timer4 ISR triggered every 1 second
-    if (led_count > 0) {
-        led_count--;  // Decrement the number of LEDs on
-    } else {
-        led_count = 8;  // Reset to 8 LEDs after reaching 0
-    }
-
+    for (int i = 0; i < 9; i++) {
+        if (orderQueue[i].status == 1) {
+            LEDsolid(i);
+            if (led_count < 7) {
+                led_count++; // increment the number of LEDs on
+            } else {
+                led_count = 0; // Reset to 8 LEDs after reaching 0
+            }
+        }
+        if (orderQueue[i].status == 2) {
+            LEDsolid(i);
+            if (led_count < 7) {
+                led_count++; // increment the number of LEDs on
+            } else {
+                led_count = 0; // Reset to 8 LEDs after reaching 0
+            }
+        }
+        if (orderQueue[i].status == 3) {
+            LEDsolid(i);
+            if (led_count < 7) {
+                led_count++; // increment the number of LEDs on
+            } else {
+                led_count = 0; // Reset to 8 LEDs after reaching 0
+            }
+        }
     // Update LED states: turn on only the `led_count` most significant LEDs
-    //LATA = (0xFF >> (8 - led_count));  // Shift the bits to light the correct number of LEDs
+        LATA = (0xFF << (led_count));  // Shift the bits to light the correct number of LEDs
 
     // Clear the interrupt flag
-    IFS0bits.T4IF = 0;
+         IFS0bits.T4IF = 0;
+    }
 }
