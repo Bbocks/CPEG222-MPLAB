@@ -88,6 +88,7 @@ void mode6_input(eKey key);
 void turnOnAlarm();
 void turnOffAlarm();
 void display_num();
+void LEDsolid(int count);
 
 // Variables to track LED status
 int led_count = 8;  // Start with 8 LEDs on
@@ -426,6 +427,10 @@ void mode3(){
     LCD_WriteStringAtPos("Order placed for", 0, 0);
     LCD_WriteStringAtPos("                ",1,0);
     LCD_WriteStringAtPos(food_item, 1, 0); // Display the food item name
+    
+    int ld_count = 0;
+    LATA &= (0xFF00 << (ld_count));
+    ld_count++;
    
 
     // Delay for a short period to allow the user to see the confirmation
@@ -518,7 +523,6 @@ void mode2_input(eKey key){
 }
 
 void mode3_input(eKey key){
-    int times = 0;
     switch(key){
         case K_E:
             SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
@@ -781,90 +785,9 @@ void setupLEDs(void) {
     //LATA = 0xFF;
 }
 
-/*void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
-    // Timer4 ISR triggered every 1 second
-    for (int i = 0; i < 9; i++) {
-        if (orderQueue[i].status == 1) {
-            LEDsolid(i);
-            if (led_count < 7) {
-                led_count++; // increment the number of LEDs on
-            } else {
-                led_count = 0; // Reset to 8 LEDs after reaching 0
-            }
-        }
-        if (orderQueue[i].status == 2) {
-            LEDsolid(i);
-            if (led_count < 7) {
-                led_count++; // increment the number of LEDs on
-            } else {
-                led_count = 0; // Reset to 8 LEDs after reaching 0
-            }
-        }
-        if (orderQueue[i].status == 3) {
-            LEDsolid(i);
-            if (led_count < 7) {
-                led_count++; // increment the number of LEDs on
-            } else {
-                led_count = 0; // Reset to 8 LEDs after reaching 0
-            }
-        }
-    // Update LED states: turn on only the `led_count` most significant LEDs
-        LATA = (0xFF << (led_count));  // Shift the bits to light the correct number of LEDs
-
-    // Clear the interrupt flag
-         IFS0bits.T4IF = 0;
-    }
-}*/
-
 void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
-    static int prepTimer = 0;  // Counts seconds for the current "in prep" order
-    static int blinkTimer = 0; // Used for LED blinking
-
-    // Loop through the 8 orders
-    for (int i = 0; i < MAX_ORDERS; i++) {
-        switch (orderQueue[i].status) {
-            case 1:  // "In Queue" - LED solid ON
-                LATAbits.LATA0 = 1; // Example: Turn LED on for this order (change to appropriate LED pin)
-                break;
-
-            case 2:  // "In Prep" - LED blinks at 4Hz
-                if (blinkTimer % 4 < 2) {
-                    LATAbits.LATA0 = 1; // Example: LED ON for this order
-                } else {
-                    LATAbits.LATA0 = 0; // Example: LED OFF for this order
-                }
-
-                // Increment prep timer for the "in prep" order
-                if (++prepTimer >= 10) {
-                    // Move this order to "ready" after 10 seconds
-                    orderQueue[i].status = 2;
-                    prepTimer = 0;
-
-                    // Move the next "in queue" order to "in prep"
-                    for (int j = 0; j < MAX_ORDERS; j++) {
-                        if (orderQueue[j].status == 0) {
-                            orderQueue[j].status = 1;  // Set as "in prep"
-                            break;
-                        }
-                    }
-                }
-                break;
-
-            case 3:  // "Ready" - LED blinks at 1Hz
-                if (blinkTimer % 2 == 0) {
-                    LATAbits.LATA0 = 1; // LED ON
-                } else {
-                    LATAbits.LATA0 = 0; // LED OFF
-                }
-                break;
-
-            default:  // "Not Placed" - LED OFF
-                LATAbits.LATA0 = 0; // Example: LED OFF for this order
-                break;
-        }
-    }
-
-    blinkTimer++;  // Increment blink timer for managing the blink cycles
+    // Timer4 ISR triggered every 1 second
+    
 
     // Clear the interrupt flag
     IFS0bits.T4IF = 0;
