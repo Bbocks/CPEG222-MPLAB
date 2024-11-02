@@ -128,6 +128,7 @@ int food_num2 = 0;
 int food_num3 = 0;
 int food_num4 = 0;
 Order food;
+int flag = 0;
 
 
 
@@ -602,11 +603,13 @@ void mode4_input(eKey key) {
             for (int l = 0; l < 8; l++) {
                 if ((orderQueue[l].num4 == vals[3]) && (orderQueue[l].num3 == vals[2]) && (orderQueue[l].num2 == vals[1]) && (orderQueue[l].num1 == vals[0])) {
                     food.status = orderQueue[l].status;
+                    flag = 1;
                     mode5();             // Go to mode 5 if code matches an order
-                } else {
-                    err_msg = "  Invalid Code  ";
-                    mode6();             // Go to mode 6 if code is invalid
-                }
+                } 
+            }
+            if (flag == 0) {
+                err_msg = "  Invalid Code  ";
+                mode6();
             }
             break;
 
