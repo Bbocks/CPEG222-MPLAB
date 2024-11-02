@@ -437,6 +437,8 @@ void mode4() {
     
     LCD_WriteStringAtPos("  Order Lookup ", 0, 0);
     LCD_WriteStringAtPos("   Enter Code   ", 1, 0);
+    
+    SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
 }
 
 void mode5(){
@@ -605,12 +607,10 @@ void mode4_input(eKey key) {
                     food.status = orderQueue[l].status;
                     flag = 1;
                     mode5();             // Go to mode 5 if code matches an order
-                } 
-            }
-            if (flag == 0) {
-                err_msg = "  Invalid Code  ";
-                mode6();
-            }
+                }   
+            } 
+            err_msg = "  Invalid Code  ";
+            mode6();
             break;
 
         default:
