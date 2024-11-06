@@ -43,8 +43,8 @@
       <itemPath>srv.c</itemPath>
       <itemPath>ssd.c</itemPath>
       <itemPath>utils.c</itemPath>
-      <itemPath>../../Downloads/main.c</itemPath>
-      <itemPath>../../Downloads/Basys MX3 library functions/Basys MX3 library functions/Basys MX3 library functions/swt.c</itemPath>
+      <itemPath>main.c</itemPath>
+      <itemPath>swt.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

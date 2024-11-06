@@ -51,17 +51,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=acl.c adc.c btn.c i2c.c lcd.c led.c mic.c pmods.c rgbled.c srv.c ssd.c utils.c ../../Downloads/main.c "../../Downloads/Basys MX3 library functions/Basys MX3 library functions/Basys MX3 library functions/swt.c"
+SOURCEFILES_QUOTED_IF_SPACED=acl.c adc.c btn.c i2c.c lcd.c led.c mic.c pmods.c rgbled.c srv.c ssd.c utils.c main.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/acl.o ${OBJECTDIR}/adc.o ${OBJECTDIR}/btn.o ${OBJECTDIR}/i2c.o ${OBJECTDIR}/lcd.o ${OBJECTDIR}/led.o ${OBJECTDIR}/mic.o ${OBJECTDIR}/pmods.o ${OBJECTDIR}/rgbled.o ${OBJECTDIR}/srv.o ${OBJECTDIR}/ssd.o ${OBJECTDIR}/utils.o ${OBJECTDIR}/_ext/1199933227/main.o ${OBJECTDIR}/_ext/1766707838/swt.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/acl.o.d ${OBJECTDIR}/adc.o.d ${OBJECTDIR}/btn.o.d ${OBJECTDIR}/i2c.o.d ${OBJECTDIR}/lcd.o.d ${OBJECTDIR}/led.o.d ${OBJECTDIR}/mic.o.d ${OBJECTDIR}/pmods.o.d ${OBJECTDIR}/rgbled.o.d ${OBJECTDIR}/srv.o.d ${OBJECTDIR}/ssd.o.d ${OBJECTDIR}/utils.o.d ${OBJECTDIR}/_ext/1199933227/main.o.d ${OBJECTDIR}/_ext/1766707838/swt.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/acl.o ${OBJECTDIR}/adc.o ${OBJECTDIR}/btn.o ${OBJECTDIR}/i2c.o ${OBJECTDIR}/lcd.o ${OBJECTDIR}/led.o ${OBJECTDIR}/mic.o ${OBJECTDIR}/pmods.o ${OBJECTDIR}/rgbled.o ${OBJECTDIR}/srv.o ${OBJECTDIR}/ssd.o ${OBJECTDIR}/utils.o ${OBJECTDIR}/main.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/acl.o.d ${OBJECTDIR}/adc.o.d ${OBJECTDIR}/btn.o.d ${OBJECTDIR}/i2c.o.d ${OBJECTDIR}/lcd.o.d ${OBJECTDIR}/led.o.d ${OBJECTDIR}/mic.o.d ${OBJECTDIR}/pmods.o.d ${OBJECTDIR}/rgbled.o.d ${OBJECTDIR}/srv.o.d ${OBJECTDIR}/ssd.o.d ${OBJECTDIR}/utils.o.d ${OBJECTDIR}/main.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/acl.o ${OBJECTDIR}/adc.o ${OBJECTDIR}/btn.o ${OBJECTDIR}/i2c.o ${OBJECTDIR}/lcd.o ${OBJECTDIR}/led.o ${OBJECTDIR}/mic.o ${OBJECTDIR}/pmods.o ${OBJECTDIR}/rgbled.o ${OBJECTDIR}/srv.o ${OBJECTDIR}/ssd.o ${OBJECTDIR}/utils.o ${OBJECTDIR}/_ext/1199933227/main.o ${OBJECTDIR}/_ext/1766707838/swt.o
+OBJECTFILES=${OBJECTDIR}/acl.o ${OBJECTDIR}/adc.o ${OBJECTDIR}/btn.o ${OBJECTDIR}/i2c.o ${OBJECTDIR}/lcd.o ${OBJECTDIR}/led.o ${OBJECTDIR}/mic.o ${OBJECTDIR}/pmods.o ${OBJECTDIR}/rgbled.o ${OBJECTDIR}/srv.o ${OBJECTDIR}/ssd.o ${OBJECTDIR}/utils.o ${OBJECTDIR}/main.o
 
 # Source Files
-SOURCEFILES=acl.c adc.c btn.c i2c.c lcd.c led.c mic.c pmods.c rgbled.c srv.c ssd.c utils.c ../../Downloads/main.c ../../Downloads/Basys MX3 library functions/Basys MX3 library functions/Basys MX3 library functions/swt.c
+SOURCEFILES=acl.c adc.c btn.c i2c.c lcd.c led.c mic.c pmods.c rgbled.c srv.c ssd.c utils.c main.c
 
 
 
@@ -173,17 +173,11 @@ ${OBJECTDIR}/utils.o: utils.c  .generated_files/flags/default/d02c72bc886ca5bb38
 	@${RM} ${OBJECTDIR}/utils.o 
 	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1  -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/utils.o.d" -o ${OBJECTDIR}/utils.o utils.c    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
 	
-${OBJECTDIR}/_ext/1199933227/main.o: ../../Downloads/main.c  .generated_files/flags/default/97f090575e210f2cea7a0e011bb5394997b96046 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}/_ext/1199933227" 
-	@${RM} ${OBJECTDIR}/_ext/1199933227/main.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1199933227/main.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1  -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/_ext/1199933227/main.o.d" -o ${OBJECTDIR}/_ext/1199933227/main.o ../../Downloads/main.c    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
-	
-${OBJECTDIR}/_ext/1766707838/swt.o: ../../Downloads/Basys\ MX3\ library\ functions/Basys\ MX3\ library\ functions/Basys\ MX3\ library\ functions/swt.c  .generated_files/flags/default/316e8ed0831da6f148dc341a7b10f881576ea239 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}/_ext/1766707838" 
-	@${RM} ${OBJECTDIR}/_ext/1766707838/swt.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1766707838/swt.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1  -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/_ext/1766707838/swt.o.d" -o ${OBJECTDIR}/_ext/1766707838/swt.o "../../Downloads/Basys MX3 library functions/Basys MX3 library functions/Basys MX3 library functions/swt.c"    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
+${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/b3e5e17070c357ce056265c43924cdb0a321ae8e .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/main.o.d 
+	@${RM} ${OBJECTDIR}/main.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1  -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/main.o.d" -o ${OBJECTDIR}/main.o main.c    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
 	
 else
 ${OBJECTDIR}/acl.o: acl.c  .generated_files/flags/default/f6201d5dba80f19232dec4a0000df9539422e7ae .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
@@ -258,17 +252,11 @@ ${OBJECTDIR}/utils.o: utils.c  .generated_files/flags/default/819d50f0a390454eba
 	@${RM} ${OBJECTDIR}/utils.o 
 	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/utils.o.d" -o ${OBJECTDIR}/utils.o utils.c    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
 	
-${OBJECTDIR}/_ext/1199933227/main.o: ../../Downloads/main.c  .generated_files/flags/default/8d9dc22501047d2a7ab2abf910f1f1965bec3f8e .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}/_ext/1199933227" 
-	@${RM} ${OBJECTDIR}/_ext/1199933227/main.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1199933227/main.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/_ext/1199933227/main.o.d" -o ${OBJECTDIR}/_ext/1199933227/main.o ../../Downloads/main.c    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
-	
-${OBJECTDIR}/_ext/1766707838/swt.o: ../../Downloads/Basys\ MX3\ library\ functions/Basys\ MX3\ library\ functions/Basys\ MX3\ library\ functions/swt.c  .generated_files/flags/default/4d55883c2d2d59dfcad863198698ddd424c669f2 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}/_ext/1766707838" 
-	@${RM} ${OBJECTDIR}/_ext/1766707838/swt.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1766707838/swt.o 
-	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/_ext/1766707838/swt.o.d" -o ${OBJECTDIR}/_ext/1766707838/swt.o "../../Downloads/Basys MX3 library functions/Basys MX3 library functions/Basys MX3 library functions/swt.c"    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
+${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/cc0dfd9319ddf8624a294ce7a09b456aa26b2a6c .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/main.o.d 
+	@${RM} ${OBJECTDIR}/main.o 
+	${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -I"../../Downloads/Basys MX3 library functions (5)/Basys MX3 library functions" -fno-common -MP -MMD -MF "${OBJECTDIR}/main.o.d" -o ${OBJECTDIR}/main.o main.c    -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -mdfp="${DFP_DIR}"  
 	
 endif
 
