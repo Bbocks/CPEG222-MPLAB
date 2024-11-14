@@ -144,29 +144,29 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     
     if (sw1 == 1) {
         if (sw0 == 1) {
-            
+            OC4RS = PR2/13.3; //Stop
         } else if (sw0 == 0) {
-            
+            OC4RS = PR2/20; //Backwards
         }
     } else if (sw1 == 0) {
         if (sw0 == 1) {
-            
+            OC4RS = PR2/10; //Forwards
         } else if (sw0 == 0) {
-            
+            OC4RS = PR2/13.3; //Stop
         }
     }
     
     if (sw7 == 1) {
         if (sw6 == 1) {
-            
+            OC5RS = PR2/13.3; //Stop
         } else if (sw6 == 0) {
-            
+            OC5RS = PR2/20; //Backwards
         }
     } else if (sw7 == 0) {
         if (sw6 == 1) {
-            
+            OC5RS = PR2/10; //Forward
         } else if (sw6 == 0) {
-            
+            OC5RS = PR2/13.3; //Stop
         }
     }
     
