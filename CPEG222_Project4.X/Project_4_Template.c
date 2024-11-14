@@ -42,6 +42,15 @@
 #define sw6 PORTBbits.RB10
 #define sw7 PORTBbits.RB9
 
+#define LD0 PORTAbits.RA0
+#define LD1 PORTAbits.RA1
+#define LD2 PORTAbits.RA2
+#define LD3 PORTAbits.RA3
+#define LD4 PORTAbits.RA4
+#define LD5 PORTAbits.RA5
+#define LD6 PORTAbits.RA6
+#define LD7 PORTAbits.RA7
+
 // Function Declarations
 void initializePorts();
 void pwmConfig();
@@ -50,6 +59,9 @@ void Timer2Setup();
 void Timer3Setup();
 
 int vals[] = {0,0,0,0};
+int led_vals;
+char left = "";
+char right = "";
 
 
 int main(void) {
@@ -57,10 +69,44 @@ int main(void) {
     pwmConfig();
     Timer2Setup();
     Timer3Setup();
+    TRISAbits.TRISA<0-7> = 0;
+    
+    LCD_WriteStringAtPos("Name: El Serpiente",0,0);
     
     while (TRUE) {
         //PS.. It might be a good idea to put this function in a timer ISR later on.
         activateServo();
+        /*
+        switch(led_vals) {
+            case 0b000:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            case 0b001:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            case 0b010:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            case 0b011:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            case 0b100:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            case 0b101:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            case 0b110:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            case 0b111:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+            default:
+                LCD_WriteStringAtPos("STP          STP",0,0);
+                break;
+        }
+         */
     }
 }
 
@@ -133,7 +179,7 @@ void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
     if (vals[2]%10==0) {
         vals[3]++;
     } 
-    SSD_WriteDigits(vals[0]%10,vals[1]%10,vals[2]%10,vals[3]%10,0,1,0,0)
+    SSD_WriteDigits(vals[0]%10,vals[1]%10,vals[2]%10,vals[3]%10,0,1,0,0);
     
     IFS0bits.T2IF = 0; // clear interrupt flag
     IEC0bits.T2IE = 1; // enable interrupt
@@ -145,30 +191,48 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     if (sw1 == 1) {
         if (sw0 == 1) {
             OC4RS = PR2/13.3; //Stop
+            left = "STP";
+            LATAbits.LATA<0-7> = 0;
         } else if (sw0 == 0) {
             OC4RS = PR2/20; //Backwards
+            left = "REV";
+            LATAbits.LATA<0-1> = 0;
         }
     } else if (sw1 == 0) {
         if (sw0 == 1) {
             OC4RS = PR2/10; //Forwards
+            left = "FWD";
+            LATAbits.LATA<2-3> = 0;
         } else if (sw0 == 0) {
             OC4RS = PR2/13.3; //Stop
+            left = "STP";
+            LATAbits.LATA<0-7> = 0;
         }
     }
     
     if (sw7 == 1) {
         if (sw6 == 1) {
             OC5RS = PR2/13.3; //Stop
+            right = "STP";
+            LATAbits.LATA<0-7> = 0;
         } else if (sw6 == 0) {
             OC5RS = PR2/20; //Backwards
+            right = "REV";
+            LATAbits.LATA<6-7> = 0;
         }
     } else if (sw7 == 0) {
         if (sw6 == 1) {
             OC5RS = PR2/10; //Forward
+            right = "FWD";
+            LATAbits.LATA<4-5> = 0;
         } else if (sw6 == 0) {
             OC5RS = PR2/13.3; //Stop
+            right = "STP";
+            LATAbits.LATA<0-7> = 0;
         }
     }
+    
+    LCD_WriteStringAtPos(left + "          " + right,1,0);
     
     IFS0bits.T3IF = 0; // clear interrupt flag
     IEC0bits.T3IE = 1; // enable interrupt
