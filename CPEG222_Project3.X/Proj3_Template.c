@@ -88,6 +88,7 @@ void mode6_input(eKey key);
 void turnOnAlarm();
 void turnOffAlarm();
 void display_num();
+void LEDsolid(int count);
 
 // Variables to track LED status
 int led_count = 8;  // Start with 8 LEDs on
@@ -128,6 +129,7 @@ int food_num2 = 0;
 int food_num3 = 0;
 int food_num4 = 0;
 Order food;
+int flag = 0;
 
 
 
@@ -203,9 +205,9 @@ macro_enable_interrupts();  // enable interrupts at CPU
     }
     SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
    
-    Order burger = {"Burger", 1, "In Queue", };
-    Order pizza = {"Pizza", 2, "In Queue", };
-    Order salad = {"Salad", 3, "In Queue", };
+    Order burger = {"Burger", 1, 0, };
+    Order pizza = {"Pizza", 2, 0, };
+    Order salad = {"Salad", 3, 0, };
    
     orders[0] = burger;
     orders[1] = pizza;
@@ -405,7 +407,7 @@ void mode3(){
         Order newOrder;
         strcpy(newOrder.foodItem, food_item); // Copy the food item name
         newOrder.orderNumber = orderCount + 1; // Incremental order number
-        newOrder.status = 0; // Status: In Queue
+        newOrder.status = 1; // Status: In Queue
         newOrder.num1 = digit1;
         newOrder.num2 = digit2;
         newOrder.num3 = digit3;
@@ -425,6 +427,10 @@ void mode3(){
     LCD_WriteStringAtPos("Order placed for", 0, 0);
     LCD_WriteStringAtPos("                ",1,0);
     LCD_WriteStringAtPos(food_item, 1, 0); // Display the food item name
+    
+    int ld_count = 0;
+    LATA &= (0xFF00 << (ld_count));
+    ld_count++;
    
 
     // Delay for a short period to allow the user to see the confirmation
@@ -436,6 +442,8 @@ void mode4() {
     
     LCD_WriteStringAtPos("  Order Lookup ", 0, 0);
     LCD_WriteStringAtPos("   Enter Code   ", 1, 0);
+    
+    SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
 }
 
 void mode5(){
@@ -444,11 +452,11 @@ void mode5(){
     LCD_WriteStringAtPos("                ",0,0);
     LCD_WriteStringAtPos(food_item,0,0);
     LCD_WriteStringAtPos("                ",1,0);
-    if (food.status == 0) {
+    if (food.status == 1) {
         LCD_WriteStringAtPos("    In Queue    ",1,0);
-    } else if (food.status == 1) {
-        LCD_WriteStringAtPos("    In Prep     ",1,0);
     } else if (food.status == 2) {
+        LCD_WriteStringAtPos("    In Prep     ",1,0);
+    } else if (food.status == 3) {
         LCD_WriteStringAtPos("     Ready      ",1,0);
     }
     delay_ms(500);
@@ -515,7 +523,6 @@ void mode2_input(eKey key){
 }
 
 void mode3_input(eKey key){
-    int times = 0;
     switch(key){
         case K_E:
             SSD_WriteDigits(-1,-1,-1,-1,0,0,0,0);
@@ -590,22 +597,24 @@ void mode4_input(eKey key) {
             for (int j = 0; j < 4; j++) {
                 vals[j] = -1;
             }
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
             count = 3;
             break;
         case K_D:
             count++;
             vals[count] = -1;
+            SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,0,0,0);
             break;
         case K_E:   
             for (int l = 0; l < 8; l++) {
                 if ((orderQueue[l].num4 == vals[3]) && (orderQueue[l].num3 == vals[2]) && (orderQueue[l].num2 == vals[1]) && (orderQueue[l].num1 == vals[0])) {
                     food.status = orderQueue[l].status;
+                    flag = 1;
                     mode5();             // Go to mode 5 if code matches an order
-                } else {
-                    mode6();             // Go to mode 6 if code is invalid
-                    LCD_WriteStringAtPos(" Invalid Code ", 1, 0);
-                }
-            }
+                }   
+            } 
+            err_msg = "  Invalid Code  ";
+            mode6();
             break;
 
         default:
@@ -778,14 +787,7 @@ void setupLEDs(void) {
 
 void __ISR(_TIMER_4_VECTOR, IPL5SOFT) Timer4ISR(void) {
     // Timer4 ISR triggered every 1 second
-    if (led_count > 0) {
-        led_count--;  // Decrement the number of LEDs on
-    } else {
-        led_count = 8;  // Reset to 8 LEDs after reaching 0
-    }
-
-    // Update LED states: turn on only the `led_count` most significant LEDs
-    //LATA = (0xFF >> (8 - led_count));  // Shift the bits to light the correct number of LEDs
+    
 
     // Clear the interrupt flag
     IFS0bits.T4IF = 0;

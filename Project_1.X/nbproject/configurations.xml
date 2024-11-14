@@ -43,8 +43,8 @@
       <itemPath>srv.c</itemPath>
       <itemPath>ssd.c</itemPath>
       <itemPath>utils.c</itemPath>
-      <itemPath>../../Downloads/main.c</itemPath>
-      <itemPath>../../Downloads/Basys MX3 library functions/Basys MX3 library functions/Basys MX3 library functions/swt.c</itemPath>
+      <itemPath>main.c</itemPath>
+      <itemPath>swt.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -756,6 +756,7 @@
         <property key="event.recorder.debugger.behavior" value="Running"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
+        <property key="firmware.download.all" value="false"/>
         <property key="lastid" value=""/>
         <property key="memories.bootflash" value="true"/>
         <property key="memories.configurationmemory" value="true"/>
