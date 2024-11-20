@@ -1,6 +1,6 @@
 /*===================================CPEG222====================================
  * Program:      Project 4 Template
- * Authors:     Robert Freeman
+ * Authors:     Brett Bockstein and Cole Smith
  * Date:        11/07/2024
  * This is a guide that you can use to write your project 4 code
 ==============================================================================*/
@@ -57,11 +57,12 @@ void pwmConfig();
 void activateServo();
 void Timer2Setup();
 void Timer3Setup();
+void setupLEDs(void);
 
 int vals[] = {-1,-1,-1,-1};
 int led_vals;
-char left;
-char right;
+char left[3];
+char right[3];
 
 
 int main(void) {
@@ -69,11 +70,13 @@ int main(void) {
     pwmConfig();
     Timer2Setup();
     Timer3Setup();
+    setupLEDs();
     for (int i = 0; i < 0; i ++) {
         LED_SetValue(i,0);
     }
     
-    LCD_WriteStringAtPos("Team: ",0,0);
+    LCD_WriteStringAtPos("Team: Mr. Krabs",0,0);
+    LCD_WriteStringAtPos("STP          STP",1,0);
     
     while (TRUE) {
         //PS.. It might be a good idea to put this function in a timer ISR later on.
@@ -86,6 +89,7 @@ int main(void) {
 
 // Initialize ports on board
 void intializePorts() {
+    DDPCONbits.JTAGEN = 0; // Required to use Pin RA0 (connected to LED 0) as IO
     LED_Init();
     LCD_Init();
     SSD_Init();
@@ -157,63 +161,77 @@ void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
 void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     IEC0bits.T3IE = 0; // disable interrupt
     
-    if (sw1 == 1) {
-        if (sw0 == 1) {
-            OC4RS = PR2/13.3; //Stop
-            left = "STP";
-            for (int i = 0; i < 0; i ++) {
-                LED_SetValue(i,0);
-            }
-        } else if (sw0 == 0) {
-            OC4RS = PR2/20; //Backwards
-            left = "REV";
-            LED_SetValue(0,1);
-            LED_SetValue(1,1);
-        }
-    } else if (sw1 == 0) {
-        if (sw0 == 1) {
-            OC4RS = PR2/10; //Forwards
-            left = "FWD";
-            LED_SetValue(2,1);
-            LED_SetValue(3,1);
-        } else if (sw0 == 0) {
-            OC4RS = PR2/13.3; //Stop
-            left = "STP";
-            for (int i = 0; i < 0; i ++) {
-                LED_SetValue(i,0);
-            }
-        }
-    }
-    
     if (sw7 == 1) {
         if (sw6 == 1) {
-            OC5RS = PR2/13.3; //Stop
-            right = "STP";
-            for (int i = 0; i < 0; i ++) {
-                LED_SetValue(i,0);
-            }
+            OC4RS = PR2/13.3; //Stop
+            //left = "STP";
+            sprintf(left,"STP");
+            LED_SetValue(4,0);
+            LED_SetValue(5,0);
+            LED_SetValue(6,0);
+            LED_SetValue(7,0);
         } else if (sw6 == 0) {
-            OC5RS = PR2/20; //Backwards
-            right = "REV";
+            OC4RS = PR2/20; //Backwards
+            //left = "REV";
+            sprintf(left,"REV");
             LED_SetValue(6,1);
             LED_SetValue(7,1);
         }
     } else if (sw7 == 0) {
         if (sw6 == 1) {
-            OC5RS = PR2/10; //Forward
-            right = "FWD";
+            OC4RS = PR2/7.5; //Forwards
+            //left = "FWD";
+            sprintf(left,"FWD");
             LED_SetValue(4,1);
             LED_SetValue(5,1);
         } else if (sw6 == 0) {
-            OC5RS = PR2/13.3; //Stop
-            right = "STP";
-            for (int i = 0; i < 0; i ++) {
-                LED_SetValue(i,0);
-            }
+            OC4RS = PR2/13.3; //Stop
+            //left = "STP";
+            sprintf(left,"STP");
+            LED_SetValue(4,0);
+            LED_SetValue(5,0);
+            LED_SetValue(6,0);
+            LED_SetValue(7,0);
         }
     }
     
-    LCD_WriteStringAtPos(left + "          " + right,1,0);
+    if (sw1 == 1) {
+        if (sw0 == 1) {
+            OC5RS = PR2/13.3; //Stop
+            //right = "STP";
+            sprintf(right,"STP");
+            LED_SetValue(0,0);
+            LED_SetValue(1,0);
+            LED_SetValue(2,0);
+            LED_SetValue(3,0);
+        } else if (sw0 == 0) {
+            OC5RS = PR2/20; //Backwards
+            //right = "REV";
+            sprintf(right,"REV");
+            LED_SetValue(0,1);
+            LED_SetValue(1,1);
+        }
+    } else if (sw1 == 0) {
+        if (sw0 == 1) {
+            OC5RS = PR2/7.5; //Forward
+            //right = "FWD";
+            sprintf(right,"FWD");
+            LED_SetValue(2,1);
+            LED_SetValue(3,1);
+        } else if (sw0 == 0) {
+            OC5RS = PR2/13.3; //Stop
+            //right = "STP";
+            sprintf(right,"STP");
+            LED_SetValue(0,0);
+            LED_SetValue(1,0);
+            LED_SetValue(2,0);
+            LED_SetValue(3,0);
+        }
+    }
+    
+    char array[16];
+    sprintf(array,"%s          %s",left,right);
+    LCD_WriteStringAtPos(array,1,0);
     
     IFS0bits.T3IF = 0; // clear interrupt flag
     IEC0bits.T3IE = 1; // enable interrupt
@@ -257,4 +275,16 @@ void activateServo(){
         //Replace X with your Timer Number
         OC4RS = (int) PR2 / 13.8; 
     }
+}
+
+void setupLEDs(void) {
+    // Configure LEDs (assuming LD0-LD7 are connected to PORTA)
+    TRISAbits.TRISA0 = 0; // Set RA0 (LD0) as output
+    TRISAbits.TRISA1 = 0; // Set RA1 (LD1) as output
+    TRISAbits.TRISA2 = 0; // Set RA2 (LD2) as output
+    TRISAbits.TRISA3 = 0; // Set RA3 (LD3) as output
+    TRISAbits.TRISA4 = 0; // Set RA4 (LD4) as output
+    TRISAbits.TRISA5 = 0; // Set RA5 (LD5) as output
+    TRISAbits.TRISA6 = 0; // Set RA6 (LD6) as output
+    TRISAbits.TRISA7 = 0; // Set RA7 (LD7) as output
 }
