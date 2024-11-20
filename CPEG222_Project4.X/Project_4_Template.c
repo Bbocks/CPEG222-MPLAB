@@ -130,29 +130,37 @@ void pwmConfig() {
 void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
     IEC0bits.T2IE = 0; // disable interrupt
     
-    vals[0]++;
-    if (vals[0]%10==0) {
-        vals[0] = 0;
-        vals[1]++;
-    } 
-    if (vals[1] == 10 && vals[0]%10==0) {
-        if (vals[2] == -1) {
+    if ((sw0 != sw1) || (sw6 != sw7)){
+        vals[0]++;
+        if (vals[0]%10==0) {
+            vals[0] = 0;
+            vals[1]++;
+        } 
+        if (vals[1] == 10 && vals[0]%10==0) {
+            if (vals[2] == -1) {
+                vals[2]++;
+            }
+            vals[1] = 0;
             vals[2]++;
-        }
-        vals[1] = 0;
-        vals[2]++;
-    } 
-    if (vals[2] == 10 && vals[1]%10==0) {
-        if (vals[3] == -1) {
+        } 
+        if (vals[2] == 10 && vals[1]%10==0) {
+            if (vals[3] == -1) {
+                vals[3]++;
+            }
+            vals[2] = 0;
             vals[3]++;
+        } 
+        if (vals[3] == 10) {
+            vals[3] = 0;
         }
-        vals[2] = 0;
-        vals[3]++;
-    } 
-    if (vals[3] == 10) {
-        vals[3] = 0;
+        SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,1,0,0);
+    } else {
+        vals[0] = -1;
+        vals[1] = -1;
+        vals[2] = -1;
+        vals[3] = -1;
+        SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,1,0,0);
     }
-    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,1,0,0);
     
     IFS0bits.T2IF = 0; // clear interrupt flag
     IEC0bits.T2IE = 1; // enable interrupt
