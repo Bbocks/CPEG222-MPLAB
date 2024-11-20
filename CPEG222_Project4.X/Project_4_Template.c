@@ -58,10 +58,10 @@ void activateServo();
 void Timer2Setup();
 void Timer3Setup();
 
-int vals[] = {0,0,0,0};
+int vals[] = {-1,-1,-1,-1};
 int led_vals;
-char left = "";
-char right = "";
+char left;
+char right;
 
 
 int main(void) {
@@ -69,44 +69,15 @@ int main(void) {
     pwmConfig();
     Timer2Setup();
     Timer3Setup();
-    TRISAbits.TRISA<0-7> = 0;
+    for (int i = 0; i < 0; i ++) {
+        LED_SetValue(i,0);
+    }
     
-    LCD_WriteStringAtPos("Name: El Serpiente",0,0);
+    LCD_WriteStringAtPos("Team: ",0,0);
     
     while (TRUE) {
         //PS.. It might be a good idea to put this function in a timer ISR later on.
         activateServo();
-        /*
-        switch(led_vals) {
-            case 0b000:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            case 0b001:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            case 0b010:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            case 0b011:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            case 0b100:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            case 0b101:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            case 0b110:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            case 0b111:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-            default:
-                LCD_WriteStringAtPos("STP          STP",0,0);
-                break;
-        }
-         */
     }
 }
 
@@ -122,20 +93,6 @@ void intializePorts() {
 }
 
 void pwmConfig() {
-    
-    // configure Timer X (select the timer, replace X with desired timer number)
-    
-    PR2 = (int)(((float)(TMR_TIME * PB_FRQ) / 256) + 0.5); //set period register, generates one interrupt every 3 ms
-    TMR2 = 0;                           //    initialize count to 0
-    T2CONbits.TCKPS = 0b111;                //    1:64 prescale value
-    T2CONbits.TGATE = 0;                //    not gated input (the default)
-    T2CONbits.TCS = 0;                  //    PCBLK input (the default)
-    T2CONbits.ON = 1;                   //    turn on Timer1
-    IPC2bits.T2IP = 7;                  //    priority
-    IPC2bits.T2IS = 3;                  //    subpriority
-    IFS0bits.T2IF = 0;                  //    clear interrupt flag
-    IEC0bits.T2IE = 1;                  //    enable interrupt
-    
     
     // Configure Output Compare Module 4
     
@@ -171,15 +128,27 @@ void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
     
     vals[0]++;
     if (vals[0]%10==0) {
+        vals[0] = 0;
         vals[1]++;
     } 
-    if (vals[1]%10==0) {
+    if (vals[1] == 10 && vals[0]%10==0) {
+        if (vals[2] == -1) {
+            vals[2]++;
+        }
+        vals[1] = 0;
         vals[2]++;
     } 
-    if (vals[2]%10==0) {
+    if (vals[2] == 10 && vals[1]%10==0) {
+        if (vals[3] == -1) {
+            vals[3]++;
+        }
+        vals[2] = 0;
         vals[3]++;
     } 
-    SSD_WriteDigits(vals[0]%10,vals[1]%10,vals[2]%10,vals[3]%10,0,1,0,0);
+    if (vals[3] == 10) {
+        vals[3] = 0;
+    }
+    SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,1,0,0);
     
     IFS0bits.T2IF = 0; // clear interrupt flag
     IEC0bits.T2IE = 1; // enable interrupt
@@ -192,21 +161,27 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
         if (sw0 == 1) {
             OC4RS = PR2/13.3; //Stop
             left = "STP";
-            LATAbits.LATA<0-7> = 0;
+            for (int i = 0; i < 0; i ++) {
+                LED_SetValue(i,0);
+            }
         } else if (sw0 == 0) {
             OC4RS = PR2/20; //Backwards
             left = "REV";
-            LATAbits.LATA<0-1> = 0;
+            LED_SetValue(0,1);
+            LED_SetValue(1,1);
         }
     } else if (sw1 == 0) {
         if (sw0 == 1) {
             OC4RS = PR2/10; //Forwards
             left = "FWD";
-            LATAbits.LATA<2-3> = 0;
+            LED_SetValue(2,1);
+            LED_SetValue(3,1);
         } else if (sw0 == 0) {
             OC4RS = PR2/13.3; //Stop
             left = "STP";
-            LATAbits.LATA<0-7> = 0;
+            for (int i = 0; i < 0; i ++) {
+                LED_SetValue(i,0);
+            }
         }
     }
     
@@ -214,21 +189,27 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
         if (sw6 == 1) {
             OC5RS = PR2/13.3; //Stop
             right = "STP";
-            LATAbits.LATA<0-7> = 0;
+            for (int i = 0; i < 0; i ++) {
+                LED_SetValue(i,0);
+            }
         } else if (sw6 == 0) {
             OC5RS = PR2/20; //Backwards
             right = "REV";
-            LATAbits.LATA<6-7> = 0;
+            LED_SetValue(6,1);
+            LED_SetValue(7,1);
         }
     } else if (sw7 == 0) {
         if (sw6 == 1) {
             OC5RS = PR2/10; //Forward
             right = "FWD";
-            LATAbits.LATA<4-5> = 0;
+            LED_SetValue(4,1);
+            LED_SetValue(5,1);
         } else if (sw6 == 0) {
             OC5RS = PR2/13.3; //Stop
             right = "STP";
-            LATAbits.LATA<0-7> = 0;
+            for (int i = 0; i < 0; i ++) {
+                LED_SetValue(i,0);
+            }
         }
     }
     
