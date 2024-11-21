@@ -1,5 +1,5 @@
-build/default/production/main.o: main.c config.h lcd.h
+build/default/production/main.o: main.c ssd.h lcd.h
 
-config.h:
+ssd.h:
 
 lcd.h:

@@ -102,14 +102,14 @@ void pwmConfig() {
     
     OC4CONbits.OCM = 6;      // PWM mode on OC4; Fault pin is disabled
     OC4CONbits.OCTSEL = PR2;   // Select the timer to use as a clock source
-    OC4RS = PR2/13.3;//OC4RS is some fraction of the Period
+    OC4RS = PR2/20;//OC4RS is some fraction of the Period
     OC4R = OC4RS;
     OC4CONbits.ON = 1;       // Start the OC4 module
     
     //Do The same for OC5**************************
     OC5CONbits.OCM = 6;      // PWM mode on OC5; Fault pin is disabled
     OC5CONbits.OCTSEL = PR2;   // Select the timer to use as a clock source
-    OC5RS = PR2/13.3;//OC5RS is some fraction of the Period
+    OC5RS = PR2/20;//OC5RS is some fraction of the Period
     OC5R = OC5RS;
     OC5CONbits.ON = 1;       // Start the OC5 module
    
@@ -171,7 +171,7 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     
     if (sw7 == 1) {
         if (sw6 == 1) {
-            OC4RS = PR2/13.3; //Stop
+            OC4RS = PR3/14.928; //Stop
             //left = "STP";
             sprintf(left,"STP");
             LED_SetValue(4,0);
@@ -179,7 +179,7 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
             LED_SetValue(6,0);
             LED_SetValue(7,0);
         } else if (sw6 == 0) {
-            OC4RS = PR2/20; //Backwards
+            OC4RS = PR3/20; //Backwards
             //left = "REV";
             sprintf(left,"REV");
             LED_SetValue(6,1);
@@ -187,13 +187,13 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
         }
     } else if (sw7 == 0) {
         if (sw6 == 1) {
-            OC4RS = PR2/7.5; //Forwards
+            OC4RS = PR3/10; //Forwards
             //left = "FWD";
             sprintf(left,"FWD");
             LED_SetValue(4,1);
             LED_SetValue(5,1);
         } else if (sw6 == 0) {
-            OC4RS = PR2/13.3; //Stop
+            OC4RS = PR3/14.928; //Stop
             //left = "STP";
             sprintf(left,"STP");
             LED_SetValue(4,0);
@@ -205,7 +205,7 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     
     if (sw1 == 1) {
         if (sw0 == 1) {
-            OC5RS = PR2/13.3; //Stop
+            OC5RS = PR3/13; //Stop
             //right = "STP";
             sprintf(right,"STP");
             LED_SetValue(0,0);
@@ -213,7 +213,7 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
             LED_SetValue(2,0);
             LED_SetValue(3,0);
         } else if (sw0 == 0) {
-            OC5RS = PR2/20; //Backwards
+            OC5RS = PR3/20; //Backwards
             //right = "REV";
             sprintf(right,"REV");
             LED_SetValue(0,1);
@@ -221,13 +221,13 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
         }
     } else if (sw1 == 0) {
         if (sw0 == 1) {
-            OC5RS = PR2/7.5; //Forward
+            OC5RS = PR3/10; //Forward
             //right = "FWD";
             sprintf(right,"FWD");
             LED_SetValue(2,1);
             LED_SetValue(3,1);
         } else if (sw0 == 0) {
-            OC5RS = PR2/13.3; //Stop
+            OC5RS = PR3/13; //Stop
             //right = "STP";
             sprintf(right,"STP");
             LED_SetValue(0,0);
