@@ -104,65 +104,21 @@ int main(void) {
             start++;
         }
         //If switch 7 is flipped to high, set start = 2
-        //if (sw7) {
-        //    start = 2;
-        //}
+        if (sw7) {
+            start = 2;
+        } 
         //If start = 2, start the movement of the bot
         if (start == 2) {
-            OC4RS = PR3/10; //Forwards
-            sprintf(left,"FWD");
-            OC5RS = PR3/20; //Forward
-            sprintf(right,"FWD");
+            OC4RS = PR3 / 10; //Forwards
+            sprintf(left, "FWD");
+            OC5RS = PR3 / 20; //Forward
+            sprintf(right, "FWD");
             char array[16];
-            sprintf(array,"%s          %s",left,right);
-            LCD_WriteStringAtPos(array,1,0);
+            sprintf(array, "%s          %s", left, right);
+            LCD_WriteStringAtPos(array, 1, 0);
             start++;
             tmrStart = 1;
         }
-        //If the middle two IR sensors see black, go forward
-        if (PM1 && !PM2 && !PM3 && PM4) {
-            OC4RS = PR3/10; //Forwards
-            sprintf(left,"FWD");
-            OC5RS = PR3/20; //Forward
-            sprintf(right,"FWD");
-            char array[16];
-            sprintf(array,"%s          %s",left,right);
-            LCD_WriteStringAtPos(array,1,0);
-        } 
-        //If the right three IR sensors see see black, turn on only the right motor
-        else if (PM1 && !PM2 && !PM3 && !PM4) {
-            OC4RS = PR3/13.3; //Stop
-            sprintf(left,"STP");
-            OC5RS = PR3/20; //Forward
-            sprintf(right,"FWD");
-            char array[16];
-            sprintf(array,"%s          %s",left,right);
-            LCD_WriteStringAtPos(array,1,0);
-        } 
-        //If the left three IR sensors see see black, turn on only the left motor
-        else if (!PM1 && !PM2 && !PM3 && PM4) {
-            OC4RS = PR3/10; //Forwards
-            sprintf(left,"FWD");
-            OC5RS = PR3/13.3; //Stop
-            sprintf(right,"STP");
-            char array[16];
-            sprintf(array,"%s          %s",left,right);
-        } 
-        //If all IR sensors see black increment pmCount
-        else if (!PM1 && !PM2 && !PM3 && !PM4) {
-            pmCount++;
-        }
-        //If pmCount = 2, the bot has hit the second checkpoint and should stop
-        if (pmCount == 2) {
-            OC4RS = PR3/13.3; //Stop
-            sprintf(left,"STP");
-            OC5RS = PR3/13.3; //Stop
-            sprintf(right,"STP");
-            char array[16];
-            sprintf(array,"%s          %s",left,right);
-            tmrStart = 0;
-        }
-        
     }
 }
 
@@ -252,11 +208,11 @@ void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
         }
         SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,1,0,0);
     } else {
+        SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,1,0,0);
         vals[0] = -1;
         vals[1] = -1;
         vals[2] = -1;
         vals[3] = -1;
-        SSD_WriteDigits(vals[0],vals[1],vals[2],vals[3],0,1,0,0);
     }
     
     IFS0bits.T2IF = 0; // clear interrupt flag
@@ -265,79 +221,69 @@ void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
 
 void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     IEC0bits.T3IE = 0; // disable interrupt
-    /*
-    if (sw7 == 1) {
-        if (sw6 == 1) {
-            OC4RS = PR3/13; //Stop
-            //left = "STP";
-            sprintf(left,"STP");
-            LED_SetValue(4,0);
-            LED_SetValue(5,0);
-            LED_SetValue(6,0);
-            LED_SetValue(7,0);
-        } else if (sw6 == 0) {
-            OC4RS = PR3/20; //Backwards
-            //left = "REV";
-            sprintf(left,"REV");
-            LED_SetValue(6,1);
-            LED_SetValue(7,1);
-        }
-    } else if (sw7 == 0) {
-        if (sw6 == 1) {
-            OC4RS = PR3/10; //Forwards
-            //left = "FWD";
-            sprintf(left,"FWD");
-            LED_SetValue(4,1);
-            LED_SetValue(5,1);
-        } else if (sw6 == 0) {
-            OC4RS = PR3/13; //Stop
-            //left = "STP";
-            sprintf(left,"STP");
-            LED_SetValue(4,0);
-            LED_SetValue(5,0);
-            LED_SetValue(6,0);
-            LED_SetValue(7,0);
-        }
-    }
     
-    if (sw1 == 1) {
-        if (sw0 == 1) {
-            OC5RS = PR3/13; //Stop
-            //right = "STP";
-            sprintf(right,"STP");
-            LED_SetValue(0,0);
-            LED_SetValue(1,0);
-            LED_SetValue(2,0);
-            LED_SetValue(3,0);
-        } else if (sw0 == 0) {
-            OC5RS = PR3/10; //Backwards
-            //right = "REV";
-            sprintf(right,"REV");
+    //If the middle two IR sensors see black, go forward
+    if (PM1 && !PM2 && !PM3 && PM4) {
+        OC4RS = PR3 / 13; //Forwards
+        sprintf(left, "FWD");
+        OC5RS = PR3 / 15; //Forward
+        sprintf(right, "FWD");
+        char array[16];
+        sprintf(array, "%s          %s", left, right);
+        LCD_WriteStringAtPos(array, 1, 0);
+    }
+    //If the right two IR sensors see see black, turn on only the left motor
+    if (!PM1 && !PM2 && PM3 && PM4) {
+        OC4RS = PR3 / 13; //Forward
+        sprintf(left, "FWD");
+        OC5RS = PR3 / 13; //Reverse
+        sprintf(right, "REV");
+        char array[16];
+        sprintf(array, "%s          %s", left, right);
+        LCD_WriteStringAtPos(array, 1, 0);
+    }
+    //If the left two IR sensors see see black, turn on only the right motor
+    if (PM1 && PM2 && !PM3 && !PM4) {
+        OC4RS = PR3 / 15; //Reverse
+        sprintf(left, "REV");
+        OC5RS = PR3 / 15; //Forward
+        sprintf(right, "FWD");
+        char array[16];
+        sprintf(array, "%s          %s", left, right);
+    }
+    //If all IR sensors see black increment pmCount
+    if (!PM1 && !PM2 && !PM3 && !PM4) {
+        pmCount++;
+        if (pmCount == 1) {
             LED_SetValue(0,1);
+        } else if (pmCount == 2) {
             LED_SetValue(1,1);
         }
-    } else if (sw1 == 0) {
-        if (sw0 == 1) {
-            OC5RS = PR3/20; //Forward
-            //right = "FWD";
-            sprintf(right,"FWD");
-            LED_SetValue(2,1);
-            LED_SetValue(3,1);
-        } else if (sw0 == 0) {
-            OC5RS = PR3/13; //Stop
-            //right = "STP";
-            sprintf(right,"STP");
-            LED_SetValue(0,0);
-            LED_SetValue(1,0);
-            LED_SetValue(2,0);
-            LED_SetValue(3,0);
-        }
     }
+    if (PM1 && PM2 && PM3 && PM4) { // Detect all white
+        OC4RS = PR3 / 16; //Reverse
+        sprintf(left, "REV");
+        OC5RS = PR3 / 11; //Reverse
+        sprintf(right, "REV");
+        char array[16];
+        sprintf(array, "%s          %s", left, right);
+    }
+    //If pmCount = 2, the bot has hit the second checkpoint and should stop
+    if (pmCount == 2) {
+        OC4RS = PR3 / 13.3; //Stop
+        sprintf(left, "STP");
+        OC5RS = PR3 / 13.3; //Stop
+        sprintf(right, "STP");
+        char array[16];
+        sprintf(array, "%s          %s", left, right);
+        tmrStart = 0;
+    }
+
+    LED_SetValue(7, PM1);
+    LED_SetValue(6, PM2);
+    LED_SetValue(5, PM3);
+    LED_SetValue(4, PM4);
     
-    char array[16];
-    sprintf(array,"%s          %s",left,right);
-    LCD_WriteStringAtPos(array,1,0);
-    */
     IFS0bits.T3IF = 0; // clear interrupt flag
     IEC0bits.T3IE = 1; // enable interrupt
 }
