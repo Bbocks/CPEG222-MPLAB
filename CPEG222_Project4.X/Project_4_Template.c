@@ -120,7 +120,7 @@ int main(void) {
             LCD_WriteStringAtPos(array,1,0);
             tmrStart = 1;
         }
-        if (PM2 && PM3) {
+        if (!PM2 && !PM3) {
             OC4RS = PR3/10; //Forwards
             sprintf(left,"FWD");
             OC5RS = PR3/20; //Forward
@@ -128,7 +128,7 @@ int main(void) {
             char array[16];
             sprintf(array,"%s          %s",left,right);
             LCD_WriteStringAtPos(array,1,0);
-        } else if (PM2 && PM3 && PM4) {
+        } else if (!PM2 && !PM3 && !PM4) {
             OC4RS = PR3/13.3; //Stop
             sprintf(left,"STP");
             OC5RS = PR3/20; //Forward
@@ -136,14 +136,14 @@ int main(void) {
             char array[16];
             sprintf(array,"%s          %s",left,right);
             LCD_WriteStringAtPos(array,1,0);
-        } else if (PM2 && PM3 && PM1) {
+        } else if (!PM2 && !PM3 && !PM1) {
             OC4RS = PR3/10; //Forwards
             sprintf(left,"FWD");
             OC5RS = PR3/13.3; //Stop
             sprintf(right,"STP");
             char array[16];
             sprintf(array,"%s          %s",left,right);
-        } else if (PM1 && PM2 && PM3 && PM4) {
+        } else if (!PM1 && !PM2 && !PM3 && !PM4) {
             pmCount++;
         }
         if (pmCount == 2) {
