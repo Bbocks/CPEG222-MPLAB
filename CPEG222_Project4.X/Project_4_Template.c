@@ -58,11 +58,13 @@ void activateServo();
 void Timer2Setup();
 void Timer3Setup();
 void setupLEDs(void);
+void MIC_Init();
 
 int vals[] = {-1,-1,-1,-1};
 int led_vals;
 char left[3];
 char right[3];
+int start;
 
 
 int main(void) {
@@ -71,6 +73,7 @@ int main(void) {
     Timer2Setup();
     Timer3Setup();
     setupLEDs();
+    MIC_Init();
     for (int i = 0; i < 0; i ++) {
         LED_SetValue(i,0);
     }
@@ -78,9 +81,24 @@ int main(void) {
     LCD_WriteStringAtPos("Team: Mr. Krabs",0,0);
     LCD_WriteStringAtPos("STP          STP",1,0);
     
+    start = 0;
+    
     while (TRUE) {
         //PS.. It might be a good idea to put this function in a timer ISR later on.
        // activateServo();
+        if (MIC_Val() > 1000) {
+            start++;
+        }
+        if (start == 2) {
+            OC4RS = PR3/10; //Forwards
+            sprintf(left,"FWD");
+            OC5RS = PR3/20; //Forward
+            sprintf(right,"FWD");
+            char array[16];
+            sprintf(array,"%s          %s",left,right);
+            LCD_WriteStringAtPos(array,1,0);
+        }
+        
     }
 }
 
@@ -171,7 +189,7 @@ void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
 
 void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     IEC0bits.T3IE = 0; // disable interrupt
-    
+    /*
     if (sw7 == 1) {
         if (sw6 == 1) {
             OC4RS = PR3/13; //Stop
@@ -243,7 +261,7 @@ void __ISR(_TIMER_3_VECTOR) Timer3ISR(void) {
     char array[16];
     sprintf(array,"%s          %s",left,right);
     LCD_WriteStringAtPos(array,1,0);
-    
+    */
     IFS0bits.T3IF = 0; // clear interrupt flag
     IEC0bits.T3IE = 1; // enable interrupt
 }
