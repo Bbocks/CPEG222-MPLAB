@@ -36,6 +36,7 @@
 #include "ssd.h"
 #include "lcd.h"
 #include "swt.h"
+#include "utils.h"
 
 #define sw0 PORTFbits.RF3
 #define sw1 PORTFbits.RF5
@@ -51,6 +52,18 @@
 #define LD6 PORTAbits.RA6
 #define LD7 PORTAbits.RA7
 
+#define PM1 PORTCbits.RC3
+#define PM2 PORTGbits.RG7
+#define PM3 PORTGbits.RG8
+#define PM4 PORTGbits.RG9
+
+#define TRUE 1
+#define FALSE 0
+#define BUTTON_DEBOUNCE_DELAY_MS 20
+#define BUTTON_RIGHT PORTBbits.RB8
+char buttonsLocked = FALSE;
+char pressedUnlockedBtnR = FALSE;
+
 // Function Declarations
 void initializePorts();
 void pwmConfig();
@@ -59,12 +72,16 @@ void Timer2Setup();
 void Timer3Setup();
 void setupLEDs(void);
 void MIC_Init();
+void handle_button_presses();
+void delay_ms(int milliseconds);
 
 int vals[] = {-1,-1,-1,-1};
 int led_vals;
 char left[3];
 char right[3];
 int start;
+int pmCount;
+int tmrStart;
 
 
 int main(void) {
@@ -86,9 +103,13 @@ int main(void) {
     while (TRUE) {
         //PS.. It might be a good idea to put this function in a timer ISR later on.
        // activateServo();
+        handle_button_presses();
         if (MIC_Val() > 1000) {
             start++;
         }
+        /*if (pressedUnlockedBtnR) {
+            start = 2;
+        }*/
         if (start == 2) {
             OC4RS = PR3/10; //Forwards
             sprintf(left,"FWD");
@@ -97,6 +118,42 @@ int main(void) {
             char array[16];
             sprintf(array,"%s          %s",left,right);
             LCD_WriteStringAtPos(array,1,0);
+            tmrStart = 1;
+        }
+        if (PM2 && PM3) {
+            OC4RS = PR3/10; //Forwards
+            sprintf(left,"FWD");
+            OC5RS = PR3/20; //Forward
+            sprintf(right,"FWD");
+            char array[16];
+            sprintf(array,"%s          %s",left,right);
+            LCD_WriteStringAtPos(array,1,0);
+        } else if (PM2 && PM3 && PM4) {
+            OC4RS = PR3/13.3; //Stop
+            sprintf(left,"STP");
+            OC5RS = PR3/20; //Forward
+            sprintf(right,"FWD");
+            char array[16];
+            sprintf(array,"%s          %s",left,right);
+            LCD_WriteStringAtPos(array,1,0);
+        } else if (PM2 && PM3 && PM1) {
+            OC4RS = PR3/10; //Forwards
+            sprintf(left,"FWD");
+            OC5RS = PR3/13.3; //Stop
+            sprintf(right,"STP");
+            char array[16];
+            sprintf(array,"%s          %s",left,right);
+        } else if (PM1 && PM2 && PM3 && PM4) {
+            pmCount++;
+        }
+        if (pmCount == 2) {
+            OC4RS = PR3/13.3; //Stop
+            sprintf(left,"STP");
+            OC5RS = PR3/13.3; //Stop
+            sprintf(right,"STP");
+            char array[16];
+            sprintf(array,"%s          %s",left,right);
+            tmrStart = 0;
         }
         
     }
@@ -112,6 +169,14 @@ void intializePorts() {
     LCD_Init();
     SSD_Init();
     SWT_Init();
+    
+    // Configure BTNR
+    TRISBbits.TRISB8 = 1; // RB8 (BTNR) configured as input
+    ANSELBbits.ANSB8 = 0; // RB8 (BTNR) disabled analog
+    TRISBbits.TRISB9 = 1; // RB8 (BTNR) configured as input
+    ANSELBbits.ANSB9 = 0; // RB8 (BTNR) disabled analog
+    TRISBbits.TRISB10 = 1; // RB8 (BTNR) configured as input
+    ANSELBbits.ANSB10 = 0; // RB8 (BTNR) disabled analog
 }
 
 void pwmConfig() {
@@ -151,7 +216,7 @@ void pwmConfig() {
 void __ISR(_TIMER_2_VECTOR) Timer2ISR(void) {
     IEC0bits.T2IE = 0; // disable interrupt
     
-    if ((sw0 != sw1) || (sw6 != sw7)){
+    if (tmrStart == 1){
         vals[0]++;
         if (vals[0]%10==0) {
             vals[0] = 0;
@@ -308,4 +373,27 @@ void setupLEDs(void) {
     TRISAbits.TRISA5 = 0; // Set RA5 (LD5) as output
     TRISAbits.TRISA6 = 0; // Set RA6 (LD6) as output
     TRISAbits.TRISA7 = 0; // Set RA7 (LD7) as output
+}
+
+void handle_button_presses()
+{
+    pressedUnlockedBtnR = FALSE;
+    if (BUTTON_RIGHT && !buttonsLocked)
+    {
+        delay_ms(BUTTON_DEBOUNCE_DELAY_MS); // debounce
+        buttonsLocked = TRUE;
+        pressedUnlockedBtnR = TRUE;
+    }
+    else if (!BUTTON_RIGHT && buttonsLocked)
+    {
+        delay_ms(BUTTON_DEBOUNCE_DELAY_MS); // debounce
+        buttonsLocked = FALSE;
+    }
+}
+
+void delay_ms(int milliseconds)
+{
+    int i;
+    for (i = 0; i < milliseconds * LOOPS_NEEDED_TO_DELAY_ONE_MS; i++)
+    {}
 }
