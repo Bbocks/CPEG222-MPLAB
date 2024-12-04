@@ -104,9 +104,9 @@ int main(void) {
             start++;
         }
         //If switch 7 is flipped to high, set start = 2
-        if (sw7) {
-            start = 2;
-        }
+        //if (sw7) {
+        //    start = 2;
+        //}
         //If start = 2, start the movement of the bot
         if (start == 2) {
             OC4RS = PR3/10; //Forwards
@@ -118,7 +118,6 @@ int main(void) {
             LCD_WriteStringAtPos(array,1,0);
             start++;
             tmrStart = 1;
-            LED_SetValue(1,1);
         }
         //If the middle two IR sensors see black, go forward
         if (PM1 && !PM2 && !PM3 && PM4) {
@@ -178,13 +177,17 @@ void intializePorts() {
     SSD_Init();
     SWT_Init();
     
-    // Configure BTNR
-    TRISBbits.TRISB8 = 1; // RB8 (BTNR) configured as input
-    ANSELBbits.ANSB8 = 0; // RB8 (BTNR) disabled analog
-    TRISBbits.TRISB9 = 1; // RB8 (BTNR) configured as input
-    ANSELBbits.ANSB9 = 0; // RB8 (BTNR) disabled analog
-    TRISBbits.TRISB10 = 1; // RB8 (BTNR) configured as input
-    ANSELBbits.ANSB10 = 0; // RB8 (BTNR) disabled analog
+    TRISBbits.TRISB9 = 1; //RB9 (SW7) configured as input
+    ANSELBbits.ANSB9 = 0; //RB9 (SW7) disable analog
+    
+    TRISCbits.TRISC3 = 1; //JA7
+    TRISGbits.TRISG7 = 1; //JA8
+    TRISGbits.TRISG8 = 1; //JA9
+    TRISGbits.TRISG9 = 1; //JA10
+    ANSELGbits.ANSG7 = 0; //Disable analog JA8
+    ANSELGbits.ANSG8 = 0; //Disable analog JA9
+    ANSELGbits.ANSG9 = 0; //Disable analog JA10
+    
 }
 
 void pwmConfig() {
