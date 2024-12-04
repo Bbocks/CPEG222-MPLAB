@@ -72,8 +72,6 @@ void Timer2Setup();
 void Timer3Setup();
 void setupLEDs(void);
 void MIC_Init();
-void handle_button_presses();
-void delay_ms(int milliseconds);
 
 int vals[] = {-1,-1,-1,-1};
 int led_vals;
@@ -101,15 +99,15 @@ int main(void) {
     start = 0;
     
     while (TRUE) {
-        //PS.. It might be a good idea to put this function in a timer ISR later on.
-       // activateServo();
-        handle_button_presses();
+        //When a clap is heard, increment the start value
         if (MIC_Val() > 1000) {
             start++;
         }
-        /*if (pressedUnlockedBtnR) {
+        //If switch 7 is flipped to high, set start = 2
+        if (sw7) {
             start = 2;
-        }*/
+        }
+        //If start = 2, start the movement of the bot
         if (start == 2) {
             OC4RS = PR3/10; //Forwards
             sprintf(left,"FWD");
@@ -118,9 +116,12 @@ int main(void) {
             char array[16];
             sprintf(array,"%s          %s",left,right);
             LCD_WriteStringAtPos(array,1,0);
+            start++;
             tmrStart = 1;
+            LED_SetValue(1,1);
         }
-        if (!PM2 && !PM3) {
+        //If the middle two IR sensors see black, go forward
+        if (PM1 && !PM2 && !PM3 && PM4) {
             OC4RS = PR3/10; //Forwards
             sprintf(left,"FWD");
             OC5RS = PR3/20; //Forward
@@ -128,7 +129,9 @@ int main(void) {
             char array[16];
             sprintf(array,"%s          %s",left,right);
             LCD_WriteStringAtPos(array,1,0);
-        } else if (!PM2 && !PM3 && !PM4) {
+        } 
+        //If the right three IR sensors see see black, turn on only the right motor
+        else if (PM1 && !PM2 && !PM3 && !PM4) {
             OC4RS = PR3/13.3; //Stop
             sprintf(left,"STP");
             OC5RS = PR3/20; //Forward
@@ -136,16 +139,21 @@ int main(void) {
             char array[16];
             sprintf(array,"%s          %s",left,right);
             LCD_WriteStringAtPos(array,1,0);
-        } else if (!PM2 && !PM3 && !PM1) {
+        } 
+        //If the left three IR sensors see see black, turn on only the left motor
+        else if (!PM1 && !PM2 && !PM3 && PM4) {
             OC4RS = PR3/10; //Forwards
             sprintf(left,"FWD");
             OC5RS = PR3/13.3; //Stop
             sprintf(right,"STP");
             char array[16];
             sprintf(array,"%s          %s",left,right);
-        } else if (!PM1 && !PM2 && !PM3 && !PM4) {
+        } 
+        //If all IR sensors see black increment pmCount
+        else if (!PM1 && !PM2 && !PM3 && !PM4) {
             pmCount++;
         }
+        //If pmCount = 2, the bot has hit the second checkpoint and should stop
         if (pmCount == 2) {
             OC4RS = PR3/13.3; //Stop
             sprintf(left,"STP");
@@ -373,27 +381,4 @@ void setupLEDs(void) {
     TRISAbits.TRISA5 = 0; // Set RA5 (LD5) as output
     TRISAbits.TRISA6 = 0; // Set RA6 (LD6) as output
     TRISAbits.TRISA7 = 0; // Set RA7 (LD7) as output
-}
-
-void handle_button_presses()
-{
-    pressedUnlockedBtnR = FALSE;
-    if (BUTTON_RIGHT && !buttonsLocked)
-    {
-        delay_ms(BUTTON_DEBOUNCE_DELAY_MS); // debounce
-        buttonsLocked = TRUE;
-        pressedUnlockedBtnR = TRUE;
-    }
-    else if (!BUTTON_RIGHT && buttonsLocked)
-    {
-        delay_ms(BUTTON_DEBOUNCE_DELAY_MS); // debounce
-        buttonsLocked = FALSE;
-    }
-}
-
-void delay_ms(int milliseconds)
-{
-    int i;
-    for (i = 0; i < milliseconds * LOOPS_NEEDED_TO_DELAY_ONE_MS; i++)
-    {}
 }
